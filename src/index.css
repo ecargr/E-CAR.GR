@@ -95,6 +95,17 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
+    overscroll-behavior: none;
+    -webkit-overscroll-behavior: none;
+  }
+  button, a[role="button"], nav a, nav button, [role="navigation"],
+  svg.lucide, .lucide, [data-nav-item] {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  button:not([class*="h-"]), [role="button"]:not([class*="h-"]) {
+    min-height: 44px;
   }
 }
 

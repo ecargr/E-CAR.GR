@@ -108,49 +108,105 @@ export default function Expenses() {
       {filtered.length === 0 && !isLoading ? (
         <EmptyState icon={Receipt} title={searchQuery ? t('no_data') : t('no_data')} actionLabel={t('add_expense')} action={() => setShowForm(true)} />
       ) : (
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('date')}</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('vehicles')}</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('category')}</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">{t('supplier')}</th>
-                  <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">{t('amount')}</th>
-                  <th className="text-center text-xs font-medium text-muted-foreground px-4 py-3 w-12">{t('receipt_documents')}</th>
-                  <th className="w-10"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filtered.map(exp => {
-                  const vehicle = vehicleMap[exp.vehicle_id];
-                  const catKey = exp.category === 'tires' ? 'tires_cat' : exp.category === 'insurance' ? 'insurance_cat' : exp.category === 'kteo' ? 'kteo_cat' : exp.category;
-                  const urls = exp.receipt_urls || (exp.receipt_url ? [exp.receipt_url] : []);
-                  const hasDocs = urls.length > 0;
-                  return (
-                    <tr key={exp.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 text-sm whitespace-nowrap">{formatDate(exp.date, locale)}</td>
-                      <td className="px-4 py-3 text-sm">{vehicle?.name || vehicle?.make || '—'}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="secondary" className={cn("text-xs", categoryColors[exp.category])}>{t(catKey)}</Badge>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground hidden md:table-cell">{exp.supplier || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-right font-semibold whitespace-nowrap">{formatCurrency(exp.amount, locale)}</td>
-                      <td className="px-4 py-3 text-center">
-                        {hasDocs ? (
-                          <button onClick={() => setViewDoc(urls)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                            <FileText className="w-3.5 h-3.5" />
-                            {urls.length}
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block bg-card rounded-xl border border-border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('date')}</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('vehicles')}</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('category')}</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('supplier')}</th>
+                    <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">{t('amount')}</th>
+                    <th className="text-center text-xs font-medium text-muted-foreground px-4 py-3 w-12">{t('receipt_documents')}</th>
+                    <th className="w-10"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filtered.map(exp => {
+                    const vehicle = vehicleMap[exp.vehicle_id];
+                    const catKey = exp.category === 'tires' ? 'tires_cat' : exp.category === 'insurance' ? 'insurance_cat' : exp.category === 'kteo' ? 'kteo_cat' : exp.category;
+                    const urls = exp.receipt_urls || (exp.receipt_url ? [exp.receipt_url] : []);
+                    const hasDocs = urls.length > 0;
+                    return (
+                      <tr key={exp.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3 text-sm whitespace-nowrap">{formatDate(exp.date, locale)}</td>
+                        <td className="px-4 py-3 text-sm">{vehicle?.name || vehicle?.make || '—'}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant="secondary" className={cn("text-xs", categoryColors[exp.category])}>{t(catKey)}</Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{exp.supplier || '—'}</td>
+                        <td className="px-4 py-3 text-sm text-right font-semibold whitespace-nowrap">{formatCurrency(exp.amount, locale)}</td>
+                        <td className="px-4 py-3 text-center">
+                          {hasDocs ? (
+                            <button onClick={() => setViewDoc(urls)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                              <FileText className="w-3.5 h-3.5" />
+                              {urls.length}
+                            </button>
+                          ) : (
+                            <span className="text-muted-foreground" title={t('missing_receipt')}><FileWarning className="w-3.5 h-3.5 text-amber-500" /></span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => { setEditItem(exp); setShowForm(true); }}>
+                                <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
+                              </DropdownMenuItem>
+                              {hasDocs && <DropdownMenuItem onClick={() => setViewDoc(urls)}><Eye className="w-3.5 h-3.5 mr-2" />{t('view_documents')}</DropdownMenuItem>}
+                              <DropdownMenuItem onClick={() => setDeleteId(exp.id)} className="text-destructive">
+                                <Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile Card Layout */}
+          <div className="md:hidden space-y-3">
+            {filtered.map(exp => {
+              const vehicle = vehicleMap[exp.vehicle_id];
+              const catKey = exp.category === 'tires' ? 'tires_cat' : exp.category === 'insurance' ? 'insurance_cat' : exp.category === 'kteo' ? 'kteo_cat' : exp.category;
+              const urls = exp.receipt_urls || (exp.receipt_url ? [exp.receipt_url] : []);
+              const hasDocs = urls.length > 0;
+              return (
+                <div key={exp.id} className="bg-card rounded-xl border border-border p-4 flex items-start gap-3 active:bg-muted/50 transition-colors">
+                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", hasDocs ? "bg-primary/10" : "bg-amber-500/10")}>
+                    {hasDocs ? <Receipt className="w-5 h-5 text-primary" /> : <FileWarning className="w-5 h-5 text-amber-600" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{vehicle?.name || vehicle?.make || '—'}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0", categoryColors[exp.category])}>{t(catKey)}</Badge>
+                          {exp.supplier && <span className="text-xs text-muted-foreground truncate">{exp.supplier}</span>}
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold whitespace-nowrap">{formatCurrency(exp.amount, locale)}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-muted-foreground">{formatDate(exp.date, locale)}</span>
+                      <div className="flex items-center gap-2">
+                        {hasDocs && (
+                          <button onClick={() => setViewDoc(urls)} className="text-[10px] text-primary font-medium">
+                            {urls.length} {t('receipt_documents')}
                           </button>
-                        ) : (
-                          <span className="text-muted-foreground" title={t('missing_receipt')}><FileWarning className="w-3.5 h-3.5 text-amber-500" /></span>
                         )}
-                      </td>
-                      <td className="px-4 py-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => { setEditItem(exp); setShowForm(true); }}>
@@ -162,14 +218,14 @@ export default function Expenses() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        </>
       )}
 
       {/* Document Viewer Dialog */}
