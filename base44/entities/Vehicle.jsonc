@@ -59,6 +59,44 @@
     "purchase_price": {
       "type": "number"
     },
+    "seller_name": {
+      "type": "string",
+      "description": "Seller/dealer name"
+    },
+    "seller_contact": {
+      "type": "string",
+      "description": "Seller contact info"
+    },
+    "purchase_method": {
+      "type": "string",
+      "enum": [
+        "dealer",
+        "private_seller",
+        "company"
+      ],
+      "description": "Purchase source"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "bank_transfer",
+        "financing",
+        "lease"
+      ],
+      "description": "Payment method"
+    },
+    "purchase_notes": {
+      "type": "string",
+      "description": "Notes about the purchase"
+    },
+    "purchase_documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Purchase document URLs (invoice, receipt, agreement, transfer docs, import docs)"
+    },
     "current_mileage": {
       "type": "number"
     },

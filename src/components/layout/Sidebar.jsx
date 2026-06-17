@@ -9,25 +9,49 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { getCustomNavItems } from '@/components/settings/NavigationCustomizer';
 
-const navItems = [
-  { key: 'dashboard', path: '/', icon: LayoutDashboard },
-  { key: 'vehicles', path: '/vehicles', icon: Car },
-  { key: 'expenses', path: '/expenses', icon: Receipt },
-  { key: 'services', path: '/services', icon: Wrench },
-  { key: 'tires', path: '/tires', icon: CircleDot },
-  { key: 'insurance', path: '/insurance', icon: Shield },
-  { key: 'kteo', path: '/kteo', icon: ClipboardCheck },
-  { key: 'documents', path: '/documents', icon: FileText },
-  { key: 'notes', path: '/notes', icon: StickyNote },
-  { key: 'reminders', path: '/reminders', icon: Bell },
-  { key: 'reports', path: '/reports', icon: BarChart3 },
+const iconMap = {
+  dashboard: LayoutDashboard,
+  vehicles: Car,
+  expenses: Receipt,
+  services: Wrench,
+  tires: CircleDot,
+  insurance: Shield,
+  kteo: ClipboardCheck,
+  documents: FileText,
+  notes: StickyNote,
+  reminders: Bell,
+  reports: BarChart3,
+};
+
+const defaultItems = [
+  { key: 'dashboard', path: '/' },
+  { key: 'vehicles', path: '/vehicles' },
+  { key: 'expenses', path: '/expenses' },
+  { key: 'services', path: '/services' },
+  { key: 'tires', path: '/tires' },
+  { key: 'insurance', path: '/insurance' },
+  { key: 'kteo', path: '/kteo' },
+  { key: 'documents', path: '/documents' },
+  { key: 'notes', path: '/notes' },
+  { key: 'reminders', path: '/reminders' },
+  { key: 'reports', path: '/reports' },
 ];
 
 export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }) {
   const { t } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+
+  const navItems = getCustomNavItems().map(item => ({
+    ...item,
+    icon: iconMap[item.key] || LayoutDashboard,
+  }));
+
+  if (navItems.length === 0) {
+    navItems.push(...defaultItems.map(d => ({ ...d, icon: iconMap[d.key] || LayoutDashboard, customName: '' })));
+  }
 
   return (
     <>
@@ -69,8 +93,9 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }) 
 
         <nav className="flex-1 overflow-y-auto py-3 px-2 scrollbar-hide">
           <div className="space-y-0.5">
-            {navItems.map(({ key, path, icon: Icon }) => {
+            {navItems.map(({ key, path, icon: Icon, customName }) => {
               const isActive = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+              const displayName = customName || t(key);
               return (
                 <Link
                   key={key}
@@ -83,11 +108,11 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }) 
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     collapsed && "lg:justify-center lg:px-2"
                   )}
-                  title={collapsed ? t(key) : undefined}
+                  title={collapsed ? displayName : undefined}
                 >
                   <Icon className={cn("w-[18px] h-[18px] shrink-0", isActive && "text-primary")} />
-                  {!collapsed && <span className="lg:block">{t(key)}</span>}
-                  {collapsed && <span className="lg:hidden">{t(key)}</span>}
+                  {!collapsed && <span className="lg:block">{displayName}</span>}
+                  {collapsed && <span className="lg:hidden">{displayName}</span>}
                 </Link>
               );
             })}

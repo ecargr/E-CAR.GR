@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useI18n } from '@/lib/i18n';
@@ -7,11 +7,13 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import ExpenseForm from '@/components/expenses/ExpenseForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
-import { Receipt, Pencil, Trash2, MoreVertical } from 'lucide-react';
+import { Receipt, Pencil, Trash2, MoreVertical, Search, X, FileImage, FileText, FileWarning, Download, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +25,8 @@ export default function Expenses() {
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [vehicleFilter, setVehicleFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewDoc, setViewDoc] = useState(null);
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: expenses = [], isLoading } = useQuery({ queryKey: ['expenses'], queryFn: () => base44.entities.Expense.list('-date', 200) });
@@ -35,24 +39,74 @@ export default function Expenses() {
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
 
-  const filtered = vehicleFilter === 'all' ? expenses : expenses.filter(e => e.vehicle_id === vehicleFilter);
+  const filtered = useMemo(() => {
+    let result = vehicleFilter === 'all' ? expenses : expenses.filter(e => e.vehicle_id === vehicleFilter);
+    
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(e => {
+        return (
+          e.supplier?.toLowerCase().includes(q) ||
+          e.invoice_number?.toLowerCase().includes(q) ||
+          e.receipt_number?.toLowerCase().includes(q) ||
+          t(e.category === 'tires' ? 'tires_cat' : e.category === 'insurance' ? 'insurance_cat' : e.category === 'kteo' ? 'kteo_cat' : e.category).toLowerCase().includes(q) ||
+          e.notes?.toLowerCase().includes(q) ||
+          String(e.amount).includes(q)
+        );
+      });
+    }
+    
+    return result;
+  }, [expenses, vehicleFilter, searchQuery, t]);
 
   const totalFiltered = filtered.reduce((s, e) => s + (e.amount || 0), 0);
+  const withoutDocs = filtered.filter(e => {
+    const urls = e.receipt_urls || (e.receipt_url ? [e.receipt_url] : []);
+    return urls.length === 0;
+  }).length;
 
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <PageHeader title={t('expenses')} action={() => setShowForm(true)} actionLabel={t('add_expense')} />
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
+      {/* Search & Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
         <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
-        <div className="text-sm text-muted-foreground">
-          {t('total')}: <span className="font-semibold text-foreground">{formatCurrency(totalFiltered, locale)}</span>
-          <span className="ml-2">({filtered.length} records)</span>
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder={t('search_expenses')}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9 pr-8"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Warning for missing docs */}
+      {withoutDocs > 0 && (
+        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-2.5 mb-4">
+          <FileWarning className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          <p className="text-xs text-amber-800 dark:text-amber-200">
+            <span className="font-medium">{withoutDocs}</span> {t('missing_receipts_warning')}
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-sm text-muted-foreground">
+          {t('total')}: <span className="font-semibold text-foreground">{formatCurrency(totalFiltered, locale)}</span>
+          <span className="ml-2">({filtered.length} records)</span>
+        </span>
+      </div>
+
       {filtered.length === 0 && !isLoading ? (
-        <EmptyState icon={Receipt} title={t('no_data')} actionLabel={t('add_expense')} action={() => setShowForm(true)} />
+        <EmptyState icon={Receipt} title={searchQuery ? t('no_data') : t('no_data')} actionLabel={t('add_expense')} action={() => setShowForm(true)} />
       ) : (
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
@@ -62,8 +116,9 @@ export default function Expenses() {
                   <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('date')}</th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('vehicles')}</th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('category')}</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">{t('supplier')}</th>
                   <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">{t('amount')}</th>
-                  <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">{t('mileage')}</th>
+                  <th className="text-center text-xs font-medium text-muted-foreground px-4 py-3 w-12">{t('receipt_documents')}</th>
                   <th className="w-10"></th>
                 </tr>
               </thead>
@@ -71,15 +126,27 @@ export default function Expenses() {
                 {filtered.map(exp => {
                   const vehicle = vehicleMap[exp.vehicle_id];
                   const catKey = exp.category === 'tires' ? 'tires_cat' : exp.category === 'insurance' ? 'insurance_cat' : exp.category === 'kteo' ? 'kteo_cat' : exp.category;
+                  const urls = exp.receipt_urls || (exp.receipt_url ? [exp.receipt_url] : []);
+                  const hasDocs = urls.length > 0;
                   return (
                     <tr key={exp.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 text-sm">{formatDate(exp.date, locale)}</td>
+                      <td className="px-4 py-3 text-sm whitespace-nowrap">{formatDate(exp.date, locale)}</td>
                       <td className="px-4 py-3 text-sm">{vehicle?.name || vehicle?.make || '—'}</td>
                       <td className="px-4 py-3">
                         <Badge variant="secondary" className={cn("text-xs", categoryColors[exp.category])}>{t(catKey)}</Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-right font-semibold">{formatCurrency(exp.amount, locale)}</td>
-                      <td className="px-4 py-3 text-sm text-right text-muted-foreground">{exp.mileage ? `${exp.mileage.toLocaleString()} km` : '—'}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground hidden md:table-cell">{exp.supplier || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-right font-semibold whitespace-nowrap">{formatCurrency(exp.amount, locale)}</td>
+                      <td className="px-4 py-3 text-center">
+                        {hasDocs ? (
+                          <button onClick={() => setViewDoc(urls)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                            <FileText className="w-3.5 h-3.5" />
+                            {urls.length}
+                          </button>
+                        ) : (
+                          <span className="text-muted-foreground" title={t('missing_receipt')}><FileWarning className="w-3.5 h-3.5 text-amber-500" /></span>
+                        )}
+                      </td>
                       <td className="px-4 py-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -89,6 +156,7 @@ export default function Expenses() {
                             <DropdownMenuItem onClick={() => { setEditItem(exp); setShowForm(true); }}>
                               <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
                             </DropdownMenuItem>
+                            {hasDocs && <DropdownMenuItem onClick={() => setViewDoc(urls)}><Eye className="w-3.5 h-3.5 mr-2" />{t('view_documents')}</DropdownMenuItem>}
                             <DropdownMenuItem onClick={() => setDeleteId(exp.id)} className="text-destructive">
                               <Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}
                             </DropdownMenuItem>
@@ -103,6 +171,38 @@ export default function Expenses() {
           </div>
         </div>
       )}
+
+      {/* Document Viewer Dialog */}
+      <Dialog open={!!viewDoc} onOpenChange={() => setViewDoc(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader><DialogTitle>{t('receipt_documents')}</DialogTitle></DialogHeader>
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {(viewDoc || []).map((url, idx) => {
+              const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url);
+              return (
+                <div key={idx} className="border border-border rounded-lg overflow-hidden">
+                  {isImage ? (
+                    <img src={url} alt="" className="w-full max-h-80 object-contain bg-muted" />
+                  ) : (
+                    <div className="p-8 flex flex-col items-center gap-3 bg-muted">
+                      <FileText className="w-10 h-10 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">{t('pdf_document')}</p>
+                    </div>
+                  )}
+                  <div className="p-2 bg-muted/50 flex justify-end gap-2">
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="sm" className="gap-1.5"><Eye className="w-3.5 h-3.5" />{t('open')}</Button>
+                    </a>
+                    <a href={url} download>
+                      <Button variant="ghost" size="sm" className="gap-1.5"><Download className="w-3.5 h-3.5" />{t('download')}</Button>
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {showForm && (
         <ExpenseForm

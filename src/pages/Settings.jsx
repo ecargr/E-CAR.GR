@@ -2,9 +2,9 @@ import React from 'react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import PageHeader from '@/components/shared/PageHeader';
-import { Globe, Sun, Moon, Monitor } from 'lucide-react';
+import NavigationCustomizer from '@/components/settings/NavigationCustomizer';
+import { Globe, Sun, Moon, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 export default function Settings() {
   const { t, locale, switchLocale } = useI18n();
@@ -27,14 +27,14 @@ export default function Settings() {
               size="sm"
               onClick={() => switchLocale('en')}
             >
-              🇬🇧 {t('english')}
+              EN
             </Button>
             <Button
               variant={locale === 'el' ? 'default' : 'outline'}
               size="sm"
               onClick={() => switchLocale('el')}
             >
-              🇬🇷 {t('greek')}
+              GR
             </Button>
           </div>
         </div>
@@ -63,6 +63,16 @@ export default function Settings() {
               <Moon className="w-3.5 h-3.5" /> {t('dark_mode')}
             </Button>
           </div>
+        </div>
+
+        {/* Navigation Customization */}
+        <div className="bg-card rounded-xl border border-border p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <Menu className="w-5 h-5 text-primary" />
+            <h3 className="font-heading font-semibold">{t('customize_navigation')}</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">{t('customize_navigation_desc')}</p>
+          <NavigationCustomizer locale={locale} />
         </div>
 
         {/* App Info */}
