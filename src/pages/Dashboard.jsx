@@ -1,11 +1,12 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useI18n } from '@/lib/i18n';
 import { formatCurrency, formatDate, getDaysUntil, getUrgencyColor, getUrgencyBg } from '@/lib/helpers';
 import { Link } from 'react-router-dom';
 import StatCard from '@/components/shared/StatCard';
 import LanguageSwitcher from '@/components/dashboard/LanguageSwitcher';
+import PullToRefresh from '@/components/shared/PullToRefresh';
 import {
   Car, Receipt, Wrench, Bell, Shield, ClipboardCheck,
   ArrowRight, Plus, AlertTriangle, FileX, FileWarning
@@ -16,6 +17,8 @@ import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
   const { t, locale } = useI18n();
+
+  const queryClient = useQueryClient();
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: expenses = [] } = useQuery({ queryKey: ['expenses'], queryFn: () => base44.entities.Expense.list('-date', 200) });
@@ -61,8 +64,20 @@ export default function Dashboard() {
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] }),
+      queryClient.invalidateQueries({ queryKey: ['expenses'] }),
+      queryClient.invalidateQueries({ queryKey: ['services'] }),
+      queryClient.invalidateQueries({ queryKey: ['insurances'] }),
+      queryClient.invalidateQueries({ queryKey: ['kteos'] }),
+      queryClient.invalidateQueries({ queryKey: ['reminders'] }),
+    ]);
+  };
+
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+    <PullToRefresh onRefresh={handleRefresh} className="h-full">
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto">
       {/* Header with Language Switcher */}
       <div className="flex items-start justify-between mb-8">
         <div>
@@ -251,5 +266,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </PullToRefresh>
   );
 }

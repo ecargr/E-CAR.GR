@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import MobileBottomNav from './MobileBottomNav';
@@ -18,6 +19,12 @@ const pageTitles = {
   '/reminders': 'reminders',
   '/reports': 'reports',
   '/settings': 'settings',
+};
+
+const pageVariants = {
+  initial: { opacity: 0, x: 24 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] } },
+  exit: { opacity: 0, x: -24, transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
 export default function AppLayout() {
@@ -43,8 +50,19 @@ export default function AppLayout() {
           onMenuClick={() => setSidebarOpen(true)}
           title={currentTitle}
         />
-        <main className="flex-1 overflow-y-auto pb-[72px] lg:pb-0">
-          <Outlet />
+        <main className="flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="h-full overflow-y-auto pb-[72px] lg:pb-0"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
         <MobileBottomNav />
       </div>

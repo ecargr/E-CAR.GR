@@ -6,6 +6,7 @@ import { formatCurrency, formatDate } from '@/lib/helpers';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleForm from '@/components/vehicles/VehicleForm';
+import PullToRefresh from '@/components/shared/PullToRefresh';
 import { Car, Bike, MoreVertical, Pencil, Trash2, Gauge, User, Building, Banknote, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,100 +25,110 @@ export default function Vehicles() {
   const [deleteId, setDeleteId] = useState(null);
   const [detailVehicle, setDetailVehicle] = useState(null);
 
-  const { data: vehicles = [], isLoading } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
+  const { data: vehicles = [], isLoading, refetch } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Vehicle.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vehicles'] }); setDeleteId(null); }
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['vehicles'] });
+      const previous = queryClient.getQueryData(['vehicles']);
+      queryClient.setQueryData(['vehicles'], old => (old || []).filter(v => v.id !== id));
+      setDeleteId(null);
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(['vehicles'], context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['vehicles'] }),
   });
 
-  return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <PageHeader title={t('vehicles')} action={() => setShowForm(true)} actionLabel={t('add_vehicle')} />
+  const handleRefresh = async () => { await refetch(); };
 
-      {vehicles.length === 0 && !isLoading ? (
-        <EmptyState icon={Car} title={t('no_data')} actionLabel={t('add_vehicle')} action={() => setShowForm(true)} />
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {vehicles.map(v => {
-            const hasPurchaseDocs = (v.purchase_documents || []).length > 0;
-            const hasPurchaseInfo = v.seller_name || v.purchase_method;
-            return (
-              <div key={v.id} className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all group">
-                <div className="h-36 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative">
-                  {v.photos?.[0] ? (
-                    <img src={v.photos[0]} alt={v.name} className="w-full h-full object-cover" />
-                  ) : (
-                    v.type === 'motorcycle' ? <Bike className="w-14 h-14 text-primary/30" /> : <Car className="w-14 h-14 text-primary/30" />
-                  )}
-                  <Badge className="absolute top-3 left-3 text-[10px]" variant="secondary">{t(v.type)}</Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical className="w-3.5 h-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setDetailVehicle(v)}>
-                        <Car className="w-3.5 h-3.5 mr-2" />{t('vehicle_details')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setEditVehicle(v); setShowForm(true); }}>
-                        <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeleteId(v.id)} className="text-destructive">
-                        <Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-heading font-semibold text-lg">{v.name}</h3>
-                  <p className="text-sm text-muted-foreground">{v.make} {v.model} {v.year ? `(${v.year})` : ''}</p>
-                  <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
-                    {v.registration_number && (
-                      <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md font-mono font-medium">
-                        {v.registration_number}
-                      </span>
+  return (
+    <PullToRefresh onRefresh={handleRefresh} className="h-full">
+      <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+        <PageHeader title={t('vehicles')} action={() => setShowForm(true)} actionLabel={t('add_vehicle')} />
+
+        {vehicles.length === 0 && !isLoading ? (
+          <EmptyState icon={Car} title={t('no_data')} actionLabel={t('add_vehicle')} action={() => setShowForm(true)} />
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {vehicles.map(v => {
+              const hasPurchaseDocs = (v.purchase_documents || []).length > 0;
+              const hasPurchaseInfo = v.seller_name || v.purchase_method;
+              return (
+                <div key={v.id} className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all group">
+                  <div className="h-36 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative">
+                    {v.photos?.[0] ? (
+                      <img src={v.photos[0]} alt={v.name} className="w-full h-full object-cover" />
+                    ) : (
+                      v.type === 'motorcycle' ? <Bike className="w-14 h-14 text-primary/30" /> : <Car className="w-14 h-14 text-primary/30" />
                     )}
-                    {v.fuel_type && <span className="flex items-center gap-1">{t(v.fuel_type)}</span>}
-                    {v.current_mileage != null && (
-                      <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />{v.current_mileage.toLocaleString()} km</span>
+                    <Badge className="absolute top-3 left-3 text-[10px]" variant="secondary">{t(v.type)}</Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Actions for ${v.name}`}>
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setDetailVehicle(v)}>
+                          <Car className="w-3.5 h-3.5 mr-2" />{t('vehicle_details')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setEditVehicle(v); setShowForm(true); }}>
+                          <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setDeleteId(v.id)} className="text-destructive">
+                          <Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-heading font-semibold text-lg">{v.name}</h3>
+                    <p className="text-sm text-muted-foreground">{v.make} {v.model} {v.year ? `(${v.year})` : ''}</p>
+                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
+                      {v.registration_number && (
+                        <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md font-mono font-medium">
+                          {v.registration_number}
+                        </span>
+                      )}
+                      {v.fuel_type && <span className="flex items-center gap-1">{t(v.fuel_type)}</span>}
+                      {v.current_mileage != null && (
+                        <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />{v.current_mileage.toLocaleString()} km</span>
+                      )}
+                    </div>
+                    {hasPurchaseInfo && (
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+                        {v.seller_name && (
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <User className="w-3 h-3" /> {v.seller_name}
+                          </span>
+                        )}
+                        {v.purchase_price != null && (
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <Banknote className="w-3 h-3" /> {formatCurrency(v.purchase_price, locale)}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1 text-[10px] ml-auto">
+                          {hasPurchaseDocs ? (
+                            <span className="text-emerald-600 flex items-center gap-0.5"><FileText className="w-3 h-3" /> {v.purchase_documents.length}</span>
+                          ) : (
+                            <span className="text-amber-500">—</span>
+                          )}
+                        </span>
+                      </div>
                     )}
                   </div>
-                  {/* Purchase info indicators */}
-                  {hasPurchaseInfo && (
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-                      {v.seller_name && (
-                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <User className="w-3 h-3" /> {v.seller_name}
-                        </span>
-                      )}
-                      {v.purchase_price != null && (
-                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <Banknote className="w-3 h-3" /> {formatCurrency(v.purchase_price, locale)}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1 text-[10px] ml-auto">
-                        {hasPurchaseDocs ? (
-                          <span className="text-emerald-600 flex items-center gap-0.5"><FileText className="w-3 h-3" /> {v.purchase_documents.length}</span>
-                        ) : (
-                          <span className="text-amber-500">—</span>
-                        )}
-                      </span>
-                    </div>
-                  )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
 
-      {/* Vehicle Detail Dialog */}
-      <Dialog open={!!detailVehicle} onOpenChange={() => setDetailVehicle(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          {detailVehicle && (
-            <>
+        {detailVehicle && (
+          <Dialog open={!!detailVehicle} onOpenChange={() => setDetailVehicle(null)}>
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{detailVehicle.name} — {t('vehicle_details')}</DialogTitle>
               </DialogHeader>
@@ -131,8 +142,6 @@ export default function Vehicles() {
                   {detailVehicle.fuel_type && <div><span className="text-muted-foreground">{t('fuel_type')}:</span> <span className="font-medium">{t(detailVehicle.fuel_type)}</span></div>}
                   {detailVehicle.current_mileage != null && <div><span className="text-muted-foreground">{t('current_mileage')}:</span> <span className="font-medium">{detailVehicle.current_mileage.toLocaleString()} km</span></div>}
                 </div>
-
-                {/* Purchase Information */}
                 <div className="border-t border-border pt-4">
                   <h4 className="font-heading font-semibold text-sm mb-3 flex items-center gap-2">
                     <Building className="w-4 h-4 text-primary" />
@@ -150,8 +159,6 @@ export default function Vehicles() {
                     <p className="text-sm text-muted-foreground mt-2">{detailVehicle.purchase_notes}</p>
                   )}
                 </div>
-
-                {/* Purchase Documents */}
                 {(detailVehicle.purchase_documents || []).length > 0 && (
                   <div className="border-t border-border pt-4">
                     <h4 className="font-heading font-semibold text-sm mb-2 flex items-center gap-2">
@@ -169,33 +176,33 @@ export default function Vehicles() {
                   </div>
                 )}
               </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
 
-      {showForm && (
-        <VehicleForm
-          open={showForm}
-          onClose={() => { setShowForm(false); setEditVehicle(null); }}
-          vehicle={editVehicle}
-        />
-      )}
+        {showForm && (
+          <VehicleForm
+            open={showForm}
+            onClose={() => { setShowForm(false); setEditVehicle(null); }}
+            vehicle={editVehicle}
+          />
+        )}
 
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('confirm_delete')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('confirm_delete')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground">
-              {t('delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('confirm_delete')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('confirm_delete')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground">
+                {t('delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </PullToRefresh>
   );
 }

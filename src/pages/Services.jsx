@@ -7,6 +7,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import ServiceForm from '@/components/services/ServiceForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
+import PullToRefresh from '@/components/shared/PullToRefresh';
 import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,12 +25,24 @@ export default function Services() {
   const [vehicleFilter, setVehicleFilter] = useState('all');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
-  const { data: services = [], isLoading } = useQuery({ queryKey: ['services'], queryFn: () => base44.entities.ServiceRecord.list('-date', 200) });
+  const { data: services = [], isLoading, refetch } = useQuery({ queryKey: ['services'], queryFn: () => base44.entities.ServiceRecord.list('-date', 200) });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.ServiceRecord.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['services'] }); setDeleteId(null); }
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['services'] });
+      const previous = queryClient.getQueryData(['services']);
+      queryClient.setQueryData(['services'], old => (old || []).filter(s => s.id !== id));
+      setDeleteId(null);
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(['services'], context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['services'] }),
   });
+
+  const handleRefresh = async () => { await refetch(); };
 
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
@@ -37,78 +50,80 @@ export default function Services() {
   const filtered = vehicleFilter === 'all' ? services : services.filter(s => s.vehicle_id === vehicleFilter);
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <PageHeader title={t('service_history')} action={() => setShowForm(true)} actionLabel={t('add_service')} />
+    <PullToRefresh onRefresh={handleRefresh} className="h-full">
+      <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+        <PageHeader title={t('service_history')} action={() => setShowForm(true)} actionLabel={t('add_service')} />
 
-      <div className="mb-6">
-        <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
-      </div>
-
-      {filtered.length === 0 && !isLoading ? (
-        <EmptyState icon={Wrench} title={t('no_data')} actionLabel={t('add_service')} action={() => setShowForm(true)} />
-      ) : (
-        <div className="space-y-3">
-          {filtered.map(svc => {
-            const vehicle = vehicleMap[svc.vehicle_id];
-            return (
-              <div key={svc.id} className="bg-card rounded-xl border border-border p-4 hover:shadow-md transition-shadow flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Wrench className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-semibold text-sm">{t(svc.service_type)}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {vehicle?.name || '—'} · {formatDate(svc.date, locale)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {svc.cost && <span className="text-sm font-bold">{formatCurrency(svc.cost, locale)}</span>}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setEditItem(svc); setShowForm(true); }}>
-                            <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeleteId(svc.id)} className="text-destructive">
-                            <Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {svc.service_center && (
-                      <Badge variant="secondary" className="text-xs gap-1"><MapPin className="w-2.5 h-2.5" />{svc.service_center}</Badge>
-                    )}
-                    {svc.mileage && (
-                      <Badge variant="secondary" className="text-xs gap-1"><Gauge className="w-2.5 h-2.5" />{svc.mileage.toLocaleString()} km</Badge>
-                    )}
-                  </div>
-                  {svc.notes && <p className="text-xs text-muted-foreground mt-2">{svc.notes}</p>}
-                </div>
-              </div>
-            );
-          })}
+        <div className="mb-6">
+          <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
         </div>
-      )}
 
-      {showForm && (
-        <ServiceForm open={showForm} onClose={() => { setShowForm(false); setEditItem(null); }} record={editItem} vehicles={vehicles} />
-      )}
+        {filtered.length === 0 && !isLoading ? (
+          <EmptyState icon={Wrench} title={t('no_data')} actionLabel={t('add_service')} action={() => setShowForm(true)} />
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(svc => {
+              const vehicle = vehicleMap[svc.vehicle_id];
+              return (
+                <div key={svc.id} className="bg-card rounded-xl border border-border p-4 hover:shadow-md transition-shadow flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Wrench className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-semibold text-sm">{t(svc.service_type)}</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {vehicle?.name || '—'} · {formatDate(svc.date, locale)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {svc.cost && <span className="text-sm font-bold">{formatCurrency(svc.cost, locale)}</span>}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${t(svc.service_type)}`}><MoreVertical className="w-3.5 h-3.5" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditItem(svc); setShowForm(true); }}>
+                              <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeleteId(svc.id)} className="text-destructive">
+                              <Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {svc.service_center && (
+                        <Badge variant="secondary" className="text-xs gap-1"><MapPin className="w-2.5 h-2.5" />{svc.service_center}</Badge>
+                      )}
+                      {svc.mileage && (
+                        <Badge variant="secondary" className="text-xs gap-1"><Gauge className="w-2.5 h-2.5" />{svc.mileage.toLocaleString()} km</Badge>
+                      )}
+                    </div>
+                    {svc.notes && <p className="text-xs text-muted-foreground mt-2">{svc.notes}</p>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>{t('confirm_delete')}</AlertDialogTitle></AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground">{t('delete')}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        {showForm && (
+          <ServiceForm open={showForm} onClose={() => { setShowForm(false); setEditItem(null); }} record={editItem} vehicles={vehicles} />
+        )}
+
+        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>{t('confirm_delete')}</AlertDialogTitle></AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground">{t('delete')}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </PullToRefresh>
   );
 }

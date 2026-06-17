@@ -20,6 +20,7 @@ export default function TopBar({ onMenuClick, title }) {
         size="icon"
         onClick={isRoot ? onMenuClick : () => navigate(-1)}
         className="-ml-1 min-h-[44px] min-w-[44px]"
+        aria-label={isRoot ? 'Open navigation menu' : 'Go back'}
       >
         {isRoot ? <Menu className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
       </Button>
@@ -27,6 +28,7 @@ export default function TopBar({ onMenuClick, title }) {
       <button
         onClick={() => switchLocale(locale === 'en' ? 'el' : 'en')}
         className="text-xs font-semibold text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        aria-label={`Switch language to ${locale === 'en' ? 'Greek' : 'English'}`}
       >
         {locale === 'en' ? 'EL' : 'EN'}
       </button>

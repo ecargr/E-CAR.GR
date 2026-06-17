@@ -79,13 +79,14 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }) 
               <Car className="w-4.5 h-4.5 text-primary-foreground" />
             </div>
           )}
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onClose}>
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onClose} aria-label="Close sidebar">
             <X className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost" size="icon"
             className="hidden lg:flex ml-auto"
             onClick={onToggleCollapse}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <ChevronLeft className={cn("w-4 h-4 transition-transform", collapsed && "rotate-180")} />
           </Button>
@@ -127,6 +128,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }) 
               "text-muted-foreground hover:bg-muted hover:text-foreground",
               collapsed && "lg:justify-center lg:px-2"
             )}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? <Sun className="w-[18px] h-[18px] shrink-0" /> : <Moon className="w-[18px] h-[18px] shrink-0" />}
             {!collapsed && <span>{theme === 'dark' ? t('light_mode') : t('dark_mode')}</span>}

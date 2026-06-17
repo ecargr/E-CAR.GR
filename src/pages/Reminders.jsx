@@ -6,6 +6,7 @@ import { formatDate, getDaysUntil, getUrgencyColor, getUrgencyBg } from '@/lib/h
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
+import PullToRefresh from '@/components/shared/PullToRefresh';
 import { Bell, Pencil, Trash2, MoreVertical, Check, Shield, ClipboardCheck, Wrench, CircleDot, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -75,17 +76,38 @@ export default function Reminders() {
   const [vehicleFilter, setVehicleFilter] = useState('all');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
-  const { data: reminders = [], isLoading } = useQuery({ queryKey: ['reminders'], queryFn: () => base44.entities.Reminder.list('due_date') });
+  const { data: reminders = [], isLoading, refetch } = useQuery({ queryKey: ['reminders'], queryFn: () => base44.entities.Reminder.list('due_date') });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Reminder.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['reminders'] }); setDeleteId(null); }
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['reminders'] });
+      const previous = queryClient.getQueryData(['reminders']);
+      queryClient.setQueryData(['reminders'], old => (old || []).filter(r => r.id !== id));
+      setDeleteId(null);
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(['reminders'], context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['reminders'] }),
   });
 
   const dismissMutation = useMutation({
     mutationFn: (id) => base44.entities.Reminder.update(id, { dismissed: true }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reminders'] })
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['reminders'] });
+      const previous = queryClient.getQueryData(['reminders']);
+      queryClient.setQueryData(['reminders'], old => (old || []).map(r => r.id === id ? { ...r, dismissed: true } : r));
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(['reminders'], context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['reminders'] }),
   });
+
+  const handleRefresh = async () => { await refetch(); };
 
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
@@ -112,11 +134,11 @@ export default function Reminders() {
               <p className="text-xs text-muted-foreground mt-0.5">{vehicle?.name || '—'} · {formatDate(rem.due_date, locale)}</p>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => dismissMutation.mutate(rem.id)} title={t('dismiss')}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => dismissMutation.mutate(rem.id)} aria-label={`Dismiss ${rem.title}`}>
                 <Check className="w-3.5 h-3.5" />
               </Button>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
+                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${rem.title}`}><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => { setEditItem(rem); setShowForm(true); }}><Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setDeleteId(rem.id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}</DropdownMenuItem>
@@ -133,39 +155,41 @@ export default function Reminders() {
   };
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <PageHeader title={t('reminders')} action={() => setShowForm(true)} actionLabel={`${t('add')} ${t('reminders')}`} />
-      <div className="mb-6"><VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} /></div>
+    <PullToRefresh onRefresh={handleRefresh} className="h-full">
+      <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+        <PageHeader title={t('reminders')} action={() => setShowForm(true)} actionLabel={`${t('add')} ${t('reminders')}`} />
+        <div className="mb-6"><VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} /></div>
 
-      {filtered.length === 0 && !isLoading ? (
-        <EmptyState icon={Bell} title={t('no_data')} actionLabel={`${t('add')} ${t('reminders')}`} action={() => setShowForm(true)} />
-      ) : (
-        <div className="space-y-6">
-          {overdue.length > 0 && (
-            <div>
-              <h2 className="font-heading font-semibold text-sm text-destructive mb-3">{t('overdue')} ({overdue.length})</h2>
-              <div className="space-y-3">{overdue.map(renderReminder)}</div>
-            </div>
-          )}
-          {upcoming.length > 0 && (
-            <div>
-              <h2 className="font-heading font-semibold text-sm text-muted-foreground mb-3">{t('upcoming')} ({upcoming.length})</h2>
-              <div className="space-y-3">{upcoming.map(renderReminder)}</div>
-            </div>
-          )}
-        </div>
-      )}
+        {filtered.length === 0 && !isLoading ? (
+          <EmptyState icon={Bell} title={t('no_data')} actionLabel={`${t('add')} ${t('reminders')}`} action={() => setShowForm(true)} />
+        ) : (
+          <div className="space-y-6">
+            {overdue.length > 0 && (
+              <div>
+                <h2 className="font-heading font-semibold text-sm text-destructive mb-3">{t('overdue')} ({overdue.length})</h2>
+                <div className="space-y-3">{overdue.map(renderReminder)}</div>
+              </div>
+            )}
+            {upcoming.length > 0 && (
+              <div>
+                <h2 className="font-heading font-semibold text-sm text-muted-foreground mb-3">{t('upcoming')} ({upcoming.length})</h2>
+                <div className="space-y-3">{upcoming.map(renderReminder)}</div>
+              </div>
+            )}
+          </div>
+        )}
 
-      {showForm && <ReminderForm open={showForm} onClose={() => { setShowForm(false); setEditItem(null); }} record={editItem} vehicles={vehicles} />}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>{t('confirm_delete')}</AlertDialogTitle></AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground">{t('delete')}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        {showForm && <ReminderForm open={showForm} onClose={() => { setShowForm(false); setEditItem(null); }} record={editItem} vehicles={vehicles} />}
+        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>{t('confirm_delete')}</AlertDialogTitle></AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground">{t('delete')}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </PullToRefresh>
   );
 }
