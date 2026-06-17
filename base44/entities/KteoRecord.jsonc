@@ -1,0 +1,41 @@
+{
+  "name": "KteoRecord",
+  "type": "object",
+  "properties": {
+    "vehicle_id": {
+      "type": "string"
+    },
+    "inspection_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "minor_defects",
+        "major_defects",
+        "fail"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "certificate_url": {
+      "type": "string"
+    },
+    "cost": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "vehicle_id",
+    "inspection_date",
+    "expiration_date",
+    "result"
+  ]
+}

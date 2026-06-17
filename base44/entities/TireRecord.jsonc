@@ -1,0 +1,53 @@
+{
+  "name": "TireRecord",
+  "type": "object",
+  "properties": {
+    "vehicle_id": {
+      "type": "string"
+    },
+    "brand": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "size": {
+      "type": "string"
+    },
+    "seasonal_type": {
+      "type": "string",
+      "enum": [
+        "summer",
+        "winter",
+        "all_season"
+      ]
+    },
+    "installation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "mileage_at_installation": {
+      "type": "number"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "installation",
+        "rotation",
+        "repair",
+        "replacement"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "cost": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "vehicle_id",
+    "brand",
+    "action_type"
+  ]
+}

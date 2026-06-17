@@ -1,0 +1,39 @@
+{
+  "name": "VehicleDocument",
+  "type": "object",
+  "properties": {
+    "vehicle_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "registration",
+        "insurance",
+        "kteo",
+        "service_invoice",
+        "purchase",
+        "warranty",
+        "custom"
+      ]
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "expiry_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "vehicle_id",
+    "title",
+    "category"
+  ]
+}

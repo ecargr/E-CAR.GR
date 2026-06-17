@@ -1,0 +1,43 @@
+{
+  "name": "Reminder",
+  "type": "object",
+  "properties": {
+    "vehicle_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "service",
+        "insurance",
+        "kteo",
+        "tire",
+        "custom"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "dismissed": {
+      "type": "boolean",
+      "default": false
+    },
+    "reference_id": {
+      "type": "string",
+      "description": "ID of related record"
+    }
+  },
+  "required": [
+    "vehicle_id",
+    "type",
+    "title",
+    "due_date"
+  ]
+}

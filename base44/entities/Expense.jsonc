@@ -1,0 +1,49 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "vehicle_id": {
+      "type": "string",
+      "description": "Reference to vehicle"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "fuel",
+        "service",
+        "repairs",
+        "tires",
+        "insurance",
+        "kteo",
+        "tolls",
+        "accessories",
+        "other"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "mileage": {
+      "type": "number"
+    },
+    "receipt_url": {
+      "type": "string"
+    },
+    "invoice_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "vehicle_id",
+    "date",
+    "amount",
+    "category"
+  ]
+}

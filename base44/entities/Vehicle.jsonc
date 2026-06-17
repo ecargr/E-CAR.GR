@@ -1,0 +1,87 @@
+{
+  "name": "Vehicle",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Vehicle nickname"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "car",
+        "motorcycle"
+      ],
+      "default": "car"
+    },
+    "registration_number": {
+      "type": "string",
+      "description": "License plate"
+    },
+    "vin": {
+      "type": "string",
+      "description": "VIN / Chassis number"
+    },
+    "make": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    },
+    "fuel_type": {
+      "type": "string",
+      "enum": [
+        "gasoline",
+        "diesel",
+        "electric",
+        "hybrid",
+        "lpg",
+        "cng"
+      ]
+    },
+    "engine_capacity": {
+      "type": "number",
+      "description": "Engine capacity in cc"
+    },
+    "horsepower": {
+      "type": "number"
+    },
+    "color": {
+      "type": "string"
+    },
+    "purchase_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "purchase_price": {
+      "type": "number"
+    },
+    "current_mileage": {
+      "type": "number"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Photo URLs"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "sold"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "name",
+    "make",
+    "model"
+  ]
+}

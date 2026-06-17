@@ -1,0 +1,56 @@
+{
+  "name": "InsurancePolicy",
+  "type": "object",
+  "properties": {
+    "vehicle_id": {
+      "type": "string"
+    },
+    "company": {
+      "type": "string"
+    },
+    "policy_number": {
+      "type": "string"
+    },
+    "coverage_type": {
+      "type": "string",
+      "enum": [
+        "basic",
+        "third_party",
+        "comprehensive",
+        "full"
+      ]
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "cost": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "document_url": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expired",
+        "cancelled"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "vehicle_id",
+    "company",
+    "start_date",
+    "expiration_date"
+  ]
+}

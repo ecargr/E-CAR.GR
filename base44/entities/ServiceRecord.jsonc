@@ -1,0 +1,52 @@
+{
+  "name": "ServiceRecord",
+  "type": "object",
+  "properties": {
+    "vehicle_id": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "mileage": {
+      "type": "number"
+    },
+    "service_type": {
+      "type": "string",
+      "enum": [
+        "oil_change",
+        "filters",
+        "brake_service",
+        "battery_replacement",
+        "timing_belt",
+        "ac_service",
+        "major_service",
+        "other"
+      ]
+    },
+    "service_center": {
+      "type": "string"
+    },
+    "cost": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "invoice_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "vehicle_id",
+    "date",
+    "service_type"
+  ]
+}
