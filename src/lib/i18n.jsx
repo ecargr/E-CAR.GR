@@ -89,6 +89,10 @@ const translations = {
     transmission: 'Transmission',
     manual: 'Manual',
     automatic: 'Automatic',
+    sort_by: 'Sort by',
+    none: 'None',
+    mileage_low_high: 'Km: Low to High',
+    newest_first: 'Newest First',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -186,6 +190,10 @@ const translations = {
     transmission: 'Κιβώτιο Ταχυτήτων',
     manual: 'Χειροκίνητο',
     automatic: 'Αυτόματο',
+    sort_by: 'Ταξινόμηση',
+    none: 'Καμία',
+    mileage_low_high: 'Χλμ: Χαμηλά-Υψηλά',
+    newest_first: 'Νεότερα Πρώτα',
   }
 };
 

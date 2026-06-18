@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useI18n } from '@/lib/i18n';
@@ -26,8 +26,15 @@ export default function Vehicles() {
   const [deleteId, setDeleteId] = useState(null);
   const [detailVehicle, setDetailVehicle] = useState(null);
   const [transmissionFilter, setTransmissionFilter] = useState('all');
+  const [makeFilter, setMakeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('none');
 
   const { data: vehicles = [], isLoading, refetch } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
+
+  const makes = useMemo(() => {
+    const unique = [...new Set(vehicles.map(v => v.make).filter(Boolean))];
+    return unique.sort();
+  }, [vehicles]);
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Vehicle.delete(id),
@@ -51,7 +58,17 @@ export default function Vehicles() {
       <div className="p-4 lg:p-8 max-w-7xl mx-auto">
         <PageHeader title={t('vehicles')} action={() => setShowForm(true)} actionLabel={t('add_vehicle')} />
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <Select value={makeFilter} onValueChange={setMakeFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t('make')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('all')} {t('makes')}</SelectItem>
+              {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
           <Select value={transmissionFilter} onValueChange={setTransmissionFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder={t('transmission')} />
@@ -62,13 +79,41 @@ export default function Vehicles() {
               <SelectItem value="automatic">{t('automatic')}</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t('sort_by')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t('none')}</SelectItem>
+              <SelectItem value="mileage_asc">{t('mileage_low_high')}</SelectItem>
+              <SelectItem value="date_desc">{t('newest_first')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {vehicles.length === 0 && !isLoading ? (
           <EmptyState icon={Car} title={t('no_data')} actionLabel={t('add_vehicle')} action={() => setShowForm(true)} />
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {vehicles.filter(v => transmissionFilter === 'all' || v.transmission === transmissionFilter).map(v => {
+            {(() => {
+              let filtered = vehicles.filter(v => {
+                if (transmissionFilter !== 'all' && v.transmission !== transmissionFilter) return false;
+                if (makeFilter !== 'all' && v.make !== makeFilter) return false;
+                return true;
+              });
+
+              if (sortBy === 'mileage_asc') {
+                filtered = [...filtered].sort((a, b) => (a.current_mileage ?? Infinity) - (b.current_mileage ?? Infinity));
+              } else if (sortBy === 'date_desc') {
+                filtered = [...filtered].sort((a, b) => {
+                  const da = a.purchase_date ? new Date(a.purchase_date).getTime() : 0;
+                  const db = b.purchase_date ? new Date(b.purchase_date).getTime() : 0;
+                  return db - da;
+                });
+              }
+
+              return filtered.map(v => {
               const hasPurchaseDocs = (v.purchase_documents || []).length > 0;
               const hasPurchaseInfo = v.seller_name || v.purchase_method;
               return (
@@ -145,7 +190,8 @@ export default function Vehicles() {
                   </div>
                 </div>
               );
-            })}
+              });
+            })()}
           </div>
         )}
 
