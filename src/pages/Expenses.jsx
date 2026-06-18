@@ -141,6 +141,7 @@ export default function Expenses() {
                     <tr className="border-b border-border bg-muted/50">
                       <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('date')}</th>
                       <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('vehicles')}</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('registration_number')}</th>
                       <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('category')}</th>
                       <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">{t('supplier')}</th>
                       <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">{t('amount')}</th>
@@ -158,6 +159,7 @@ export default function Expenses() {
                         <tr key={exp.id} className="hover:bg-muted/30 transition-colors">
                           <td className="px-4 py-3 text-sm whitespace-nowrap">{formatDate(exp.date, locale)}</td>
                           <td className="px-4 py-3 text-sm">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}`.trim() || vehicle.name || '—' : '—'}</td>
+                          <td className="px-4 py-3 text-sm font-mono font-medium">{vehicle?.registration_number || '—'}</td>
                           <td className="px-4 py-3">
                             <Badge variant="secondary" className={cn("text-xs", categoryColors[exp.category])}>{t(catKey)}</Badge>
                           </td>
@@ -215,7 +217,7 @@ export default function Expenses() {
                           <p className="text-sm font-medium truncate">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}`.trim() || vehicle.name || '—' : '—'}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0", categoryColors[exp.category])}>{t(catKey)}</Badge>
-                            {exp.supplier && <span className="text-xs text-muted-foreground truncate">{exp.supplier}</span>}
+                            {vehicle?.registration_number && <span className="text-xs font-mono font-semibold">{vehicle.registration_number}</span>}
                           </div>
                         </div>
                         <span className="text-sm font-semibold whitespace-nowrap">{formatCurrency(exp.amount, locale)}</span>
