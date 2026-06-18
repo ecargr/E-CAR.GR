@@ -30,6 +30,7 @@ export default function VehicleForm({ open, onClose, vehicle }) {
     make: vehicle?.make || '',
     model: vehicle?.model || '',
     year: vehicle?.year || '',
+    registration_date: vehicle?.registration_date || '',
     fuel_type: vehicle?.fuel_type || 'gasoline',
     transmission: vehicle?.transmission || '',
     engine_capacity: vehicle?.engine_capacity || '',
@@ -144,7 +145,7 @@ export default function VehicleForm({ open, onClose, vehicle }) {
               <Label>{t('version')} <span className="text-muted-foreground text-xs">({t('optional')})</span></Label>
               <Input value={form.version} onChange={e => set('version', e.target.value)} placeholder={t('version_placeholder')} />
             </div>
-            <div><Label>{t('year')}</Label><Input type="number" value={form.year} onChange={e => set('year', e.target.value)} /></div>
+            <div><Label>{t('registration_date_label')}</Label><Input type="date" value={form.registration_date} onChange={e => set('registration_date', e.target.value)} /></div>
             <div><Label>{t('registration_number')}</Label><Input value={form.registration_number} onChange={e => set('registration_number', e.target.value)} /></div>
             <div className="col-span-2"><Label>{t('vin_number')}</Label><Input value={form.vin} onChange={e => set('vin', e.target.value)} /></div>
             <div>

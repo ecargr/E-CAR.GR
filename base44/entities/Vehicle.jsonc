@@ -35,6 +35,11 @@
     "year": {
       "type": "number"
     },
+    "registration_date": {
+      "type": "string",
+      "format": "date",
+      "description": "First registration date"
+    },
     "fuel_type": {
       "type": "string",
       "enum": [

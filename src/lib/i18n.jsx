@@ -20,6 +20,7 @@ const translations = {
     add_service: 'Add Service', add_vehicle: 'Add Vehicle',
     vehicle_name: 'Vehicle Name', registration_number: 'Registration Number',
     vin_number: 'VIN / Chassis Number', make: 'Make', model: 'Model', year: 'Year',
+    registration_date_label: 'Registration Date',
     fuel_type: 'Fuel Type', engine_capacity: 'Engine Capacity', horsepower: 'Horsepower',
     color: 'Color', purchase_date: 'Purchase Date', purchase_price: 'Purchase Price',
     current_mileage: 'Current Mileage', vehicle_photo: 'Vehicle Photo',
@@ -92,7 +93,8 @@ const translations = {
     sort_by: 'Sort by',
     none: 'None',
     mileage_low_high: 'Km: Low to High',
-    newest_first: 'Newest First',
+    mileage_high_low: 'Km: High to Low',
+    reg_date_newest: 'Reg. Date: Newest First',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -115,6 +117,7 @@ const translations = {
     add_service: 'Προσθήκη Σέρβις', add_vehicle: 'Προσθήκη Οχήματος',
     vehicle_name: 'Όνομα Οχήματος', registration_number: 'Αριθμός Κυκλοφορίας',
     vin_number: 'Αριθμός Πλαισίου', make: 'Μάρκα', model: 'Μοντέλο', year: 'Έτος',
+    registration_date_label: 'Ημ/νία Ταξινόμησης',
     fuel_type: 'Τύπος Καυσίμου', engine_capacity: 'Κυβισμός',
     horsepower: 'Ιπποδύναμη', color: 'Χρώμα', purchase_date: 'Ημ/νία Αγοράς',
     purchase_price: 'Τιμή Αγοράς', current_mileage: 'Τρέχοντα Χιλιόμετρα',
@@ -193,7 +196,8 @@ const translations = {
     sort_by: 'Ταξινόμηση',
     none: 'Καμία',
     mileage_low_high: 'Χλμ: Χαμηλά-Υψηλά',
-    newest_first: 'Νεότερα Πρώτα',
+    mileage_high_low: 'Χλμ: Υψηλά-Χαμηλά',
+    reg_date_newest: 'Ημ/νία Ταξιν.: Νεότερα Πρώτα',
   }
 };
 

@@ -87,7 +87,8 @@ export default function Vehicles() {
             <SelectContent>
               <SelectItem value="none">{t('none')}</SelectItem>
               <SelectItem value="mileage_asc">{t('mileage_low_high')}</SelectItem>
-              <SelectItem value="date_desc">{t('newest_first')}</SelectItem>
+              <SelectItem value="mileage_desc">{t('mileage_high_low')}</SelectItem>
+              <SelectItem value="reg_date_desc">{t('reg_date_newest')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -105,10 +106,12 @@ export default function Vehicles() {
 
               if (sortBy === 'mileage_asc') {
                 filtered = [...filtered].sort((a, b) => (a.current_mileage ?? Infinity) - (b.current_mileage ?? Infinity));
-              } else if (sortBy === 'date_desc') {
+              } else if (sortBy === 'mileage_desc') {
+                filtered = [...filtered].sort((a, b) => (b.current_mileage ?? 0) - (a.current_mileage ?? 0));
+              } else if (sortBy === 'reg_date_desc') {
                 filtered = [...filtered].sort((a, b) => {
-                  const da = a.purchase_date ? new Date(a.purchase_date).getTime() : 0;
-                  const db = b.purchase_date ? new Date(b.purchase_date).getTime() : 0;
+                  const da = a.registration_date ? new Date(a.registration_date).getTime() : 0;
+                  const db = b.registration_date ? new Date(b.registration_date).getTime() : 0;
                   return db - da;
                 });
               }
@@ -146,7 +149,7 @@ export default function Vehicles() {
                   </div>
                   <div className="p-4">
                     <h3 className="font-heading font-semibold text-lg">{v.make} {v.model} {v.version ? <span className="text-sm font-normal text-muted-foreground">{v.version}</span> : ''}</h3>
-                    <p className="text-sm text-muted-foreground">{v.name || `${v.year || ''}`}</p>
+                    <p className="text-sm text-muted-foreground">{v.name || (v.registration_date ? formatDate(v.registration_date, locale) : '')}</p>
                     <div className="flex items-center gap-3 mt-3 flex-wrap">
                       {v.registration_number && (
                         <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-mono font-bold text-sm tracking-wider">
@@ -214,7 +217,7 @@ export default function Vehicles() {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div><span className="text-muted-foreground">{t('make')}:</span> <span className="font-medium">{detailVehicle.make}</span></div>
                   <div><span className="text-muted-foreground">{t('model')}:</span> <span className="font-medium">{detailVehicle.model}</span></div>
-                  {detailVehicle.year && <div><span className="text-muted-foreground">{t('year')}:</span> <span className="font-medium">{detailVehicle.year}</span></div>}
+                  {detailVehicle.registration_date && <div><span className="text-muted-foreground">{t('registration_date_label')}:</span> <span className="font-medium">{formatDate(detailVehicle.registration_date, locale)}</span></div>}
                   {detailVehicle.registration_number && <div><span className="text-muted-foreground">{t('registration_number')}:</span> <span className="font-medium">{detailVehicle.registration_number}</span></div>}
                   {detailVehicle.vin && <div><span className="text-muted-foreground">{t('vin_number')}:</span> <span className="font-medium text-xs">{detailVehicle.vin}</span></div>}
                   {detailVehicle.fuel_type && <div><span className="text-muted-foreground">{t('fuel_type')}:</span> <span className="font-medium">{t(detailVehicle.fuel_type)}</span></div>}
