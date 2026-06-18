@@ -12,6 +12,7 @@ import { Receipt, Pencil, Trash2, MoreVertical, Search, X, FileText, FileWarning
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -29,6 +30,7 @@ export default function Expenses() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [viewDoc, setViewDoc] = useState(null);
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
@@ -71,8 +73,9 @@ export default function Expenses() {
     }
     if (dateFrom) result = result.filter(e => e.date >= dateFrom);
     if (dateTo) result = result.filter(e => e.date <= dateTo);
+    if (categoryFilter !== 'all') result = result.filter(e => e.category === categoryFilter);
     return result;
-  }, [expenses, vehicleFilter, searchQuery, dateFrom, dateTo, t]);
+  }, [expenses, vehicleFilter, searchQuery, dateFrom, dateTo, categoryFilter, t]);
 
   const totalFiltered = filtered.reduce((s, e) => s + (e.amount || 0), 0);
   const withoutDocs = filtered.filter(e => {
@@ -101,7 +104,27 @@ export default function Expenses() {
               </button>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-36 h-9 text-xs">
+                <SelectValue placeholder={t('category')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('all')}</SelectItem>
+                <SelectItem value="fuel">{t('fuel')}</SelectItem>
+                <SelectItem value="service">{t('service')}</SelectItem>
+                <SelectItem value="repairs">{t('repairs')}</SelectItem>
+                <SelectItem value="tires">{t('tires_cat')}</SelectItem>
+                <SelectItem value="insurance">{t('insurance_cat')}</SelectItem>
+                <SelectItem value="kteo">{t('kteo_cat')}</SelectItem>
+                <SelectItem value="tolls">{t('tolls')}</SelectItem>
+                <SelectItem value="parking">{t('parking')}</SelectItem>
+                <SelectItem value="car_wash">{t('car_wash')}</SelectItem>
+                <SelectItem value="road_tax">{t('road_tax')}</SelectItem>
+                <SelectItem value="accessories">{t('accessories')}</SelectItem>
+                <SelectItem value="other">{t('other')}</SelectItem>
+              </SelectContent>
+            </Select>
             <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-xs" placeholder={t('date_from')} />
             <span className="text-xs text-muted-foreground">—</span>
             <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36 text-xs" placeholder={t('date_to')} />
