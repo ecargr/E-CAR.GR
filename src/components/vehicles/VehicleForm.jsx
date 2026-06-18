@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Car, Bike, Upload, FileText, X, Image, Camera } from 'lucide-react';
+import AutocompleteInput from '@/components/shared/AutocompleteInput';
+import { getMakesByType, getModelsForMake } from '@/lib/carData';
 
 const fuelTypes = ['gasoline', 'diesel', 'electric', 'hybrid', 'lpg', 'cng'];
 const purchaseMethods = ['dealer', 'private_seller', 'company'];
@@ -50,6 +52,15 @@ export default function VehicleForm({ open, onClose, vehicle }) {
   const docFileRef = useRef(null);
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const makes = useMemo(() => getMakesByType(form.type), [form.type]);
+  const models = useMemo(() => getModelsForMake(form.make, form.type), [form.make, form.type]);
+
+  const handleMakeChange = (v) => {
+    set('make', v);
+    // Clear model when make changes (if current model doesn't exist for new make)
+    if (v !== form.make) set('model', '');
+  };
 
   const mutation = useMutation({
     mutationFn: (data) => isEdit ? base44.entities.Vehicle.update(vehicle.id, data) : base44.entities.Vehicle.create(data),
@@ -126,8 +137,8 @@ export default function VehicleForm({ open, onClose, vehicle }) {
               <Label>{t('vehicle_name')} <span className="text-muted-foreground text-xs">({t('optional')})</span></Label>
               <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder={t('vehicle_name_placeholder')} />
             </div>
-            <div><Label>{t('make')} *</Label><Input value={form.make} onChange={e => set('make', e.target.value)} required /></div>
-            <div><Label>{t('model')} *</Label><Input value={form.model} onChange={e => set('model', e.target.value)} required /></div>
+            <div><Label>{t('make')} *</Label><AutocompleteInput value={form.make} onChange={handleMakeChange} options={makes} placeholder={t('choose_or_type_make')} required /></div>
+            <div><Label>{t('model')} *</Label><AutocompleteInput value={form.model} onChange={v => set('model', v)} options={models} placeholder={t('choose_or_type_model')} required /></div>
             <div className="col-span-2">
               <Label>{t('version')} <span className="text-muted-foreground text-xs">({t('optional')})</span></Label>
               <Input value={form.version} onChange={e => set('version', e.target.value)} placeholder={t('version_placeholder')} />

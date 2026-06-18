@@ -84,6 +84,8 @@ const translations = {
     version: 'Version / Trim',
     version_placeholder: 'e.g. Sport, Limited Edition...',
     vehicle_name_placeholder: 'e.g. My Daily Driver, Family Car...',
+    choose_or_type_make: 'Choose or type a brand...',
+    choose_or_type_model: 'Choose or type a model...',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -176,6 +178,8 @@ const translations = {
     version: 'Έκδοση / Εξοπλισμός',
     version_placeholder: 'π.χ. Sport, Limited Edition...',
     vehicle_name_placeholder: 'π.χ. Το Καθημερινό μου, Οικογενειακό...',
+    choose_or_type_make: 'Επιλέξτε ή πληκτρολογήστε μάρκα...',
+    choose_or_type_model: 'Επιλέξτε ή πληκτρολογήστε μοντέλο...',
   }
 };
 
