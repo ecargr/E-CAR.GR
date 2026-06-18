@@ -73,7 +73,14 @@ export default function Expenses() {
     }
     if (dateFrom) result = result.filter(e => e.date >= dateFrom);
     if (dateTo) result = result.filter(e => e.date <= dateTo);
-    if (categoryFilter !== 'all') result = result.filter(e => e.category === categoryFilter);
+    if (categoryFilter !== 'all') {
+      if (categoryFilter === 'others') {
+        const mainCats = ['fuel', 'service', 'tires', 'insurance', 'kteo'];
+        result = result.filter(e => !mainCats.includes(e.category));
+      } else {
+        result = result.filter(e => e.category === categoryFilter);
+      }
+    }
     return result;
   }, [expenses, vehicleFilter, searchQuery, dateFrom, dateTo, categoryFilter, t]);
 
@@ -113,16 +120,10 @@ export default function Expenses() {
                 <SelectItem value="all">{t('all')}</SelectItem>
                 <SelectItem value="fuel">{t('fuel')}</SelectItem>
                 <SelectItem value="service">{t('service')}</SelectItem>
-                <SelectItem value="repairs">{t('repairs')}</SelectItem>
                 <SelectItem value="tires">{t('tires_cat')}</SelectItem>
                 <SelectItem value="insurance">{t('insurance_cat')}</SelectItem>
                 <SelectItem value="kteo">{t('kteo_cat')}</SelectItem>
-                <SelectItem value="tolls">{t('tolls')}</SelectItem>
-                <SelectItem value="parking">{t('parking')}</SelectItem>
-                <SelectItem value="car_wash">{t('car_wash')}</SelectItem>
-                <SelectItem value="road_tax">{t('road_tax')}</SelectItem>
-                <SelectItem value="accessories">{t('accessories')}</SelectItem>
-                <SelectItem value="other">{t('other')}</SelectItem>
+                <SelectItem value="others">{t('others_group')}</SelectItem>
               </SelectContent>
             </Select>
             <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-xs" placeholder={t('date_from')} />

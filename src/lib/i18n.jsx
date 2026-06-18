@@ -97,6 +97,7 @@ const translations = {
     reg_date_newest: 'Reg. Date: Newest First',
     date_from: 'From',
     date_to: 'To',
+    others_group: 'Others',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -202,6 +203,7 @@ const translations = {
     reg_date_newest: 'Ημ/νία Ταξιν.: Νεότερα Πρώτα',
     date_from: 'Από',
     date_to: 'Έως',
+    others_group: 'Άλλα',
   }
 };
 
