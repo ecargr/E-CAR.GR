@@ -6,6 +6,7 @@ import { formatCurrency, formatDate } from '@/lib/helpers';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
+import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
 import { CircleDot, Pencil, Trash2, MoreVertical, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,10 @@ function TireForm({ open, onClose, record, vehicles }) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const isEdit = !!record;
+  const twoYearsLater = new Date();
+  twoYearsLater.setFullYear(twoYearsLater.getFullYear() + 2);
+  const defaultReminderDate = twoYearsLater.toISOString().split('T')[0];
+
   const [form, setForm] = useState({
     vehicle_id: record?.vehicle_id || '',
     brand: record?.brand || '',
@@ -35,11 +40,44 @@ function TireForm({ open, onClose, record, vehicles }) {
     action_type: record?.action_type || 'installation',
     cost: record?.cost || '',
     notes: record?.notes || '',
+    photos: record?.photos || [],
+    reminder_date: defaultReminderDate,
   });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const autoCreateExpense = async () => {
+    if (!form.cost || isEdit) return;
+    const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+    await base44.entities.Expense.create({
+      vehicle_id: form.vehicle_id,
+      date: form.installation_date || new Date().toISOString().split('T')[0],
+      amount: Number(form.cost),
+      category: 'tires',
+      notes: `${t('tires')}: ${form.brand} ${form.model || ''} — ${t(form.action_type)}${vehicle ? ' — ' + (vehicle.name || vehicle.make + ' ' + vehicle.model) : ''}`,
+    });
+  };
+
+  const autoCreateReminder = async () => {
+    if (isEdit) return;
+    const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+    await base44.entities.Reminder.create({
+      vehicle_id: form.vehicle_id,
+      type: 'tire',
+      title: `${t('tires')}: ${form.brand} ${form.model || ''} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
+      due_date: form.reminder_date,
+    });
+  };
+
   const mutation = useMutation({
-    mutationFn: (d) => isEdit ? base44.entities.TireRecord.update(record.id, d) : base44.entities.TireRecord.create(d),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['tires'] }); onClose(); }
+    mutationFn: async (d) => isEdit ? await base44.entities.TireRecord.update(record.id, d) : await base44.entities.TireRecord.create(d),
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['tires'] });
+      await autoCreateExpense();
+      await autoCreateReminder();
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      onClose();
+    }
   });
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -76,6 +114,14 @@ function TireForm({ open, onClose, record, vehicles }) {
             <div><Label>{t('mileage_at_installation')}</Label><Input type="number" value={form.mileage_at_installation} onChange={e => set('mileage_at_installation', e.target.value)} /></div>
           </div>
           <div><Label>{t('cost')} (€)</Label><Input type="number" step="0.01" value={form.cost} onChange={e => set('cost', e.target.value)} /></div>
+          <AttachmentsUploader urls={form.photos} onChange={v => set('photos', v)} label={t('receipt_documents')} showCamera />
+          {!isEdit && (
+            <div>
+              <Label>{t('reminder_date')}</Label>
+              <Input type="date" value={form.reminder_date} onChange={e => set('reminder_date', e.target.value)} />
+              <p className="text-xs text-muted-foreground mt-1">{t('auto_reminder_hint') || 'A reminder will be created for this date'}</p>
+            </div>
+          )}
           <div><Label>{t('notes_label')}</Label><Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} /></div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>{t('cancel')}</Button>

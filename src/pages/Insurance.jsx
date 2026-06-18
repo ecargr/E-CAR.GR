@@ -6,6 +6,7 @@ import { formatCurrency, formatDate, getDaysUntil, getUrgencyColor, getUrgencyBg
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
+import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
 import { Shield, Pencil, Trash2, MoreVertical, Calendar, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,11 +34,45 @@ function InsuranceForm({ open, onClose, record, vehicles }) {
     expiration_date: record?.expiration_date || '',
     cost: record?.cost || '',
     notes: record?.notes || '',
+    document_url: record?.document_url || '',
+    photos: record?.photos || [],
+    reminder_date: record?.expiration_date || '',
   });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const autoCreateExpense = async () => {
+    if (!form.cost || isEdit) return;
+    const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+    await base44.entities.Expense.create({
+      vehicle_id: form.vehicle_id,
+      date: form.start_date || new Date().toISOString().split('T')[0],
+      amount: Number(form.cost),
+      category: 'insurance',
+      notes: `${t('insurance')}: ${form.company} — ${t(form.coverage_type)}${vehicle ? ' — ' + (vehicle.name || vehicle.make + ' ' + vehicle.model) : ''}`,
+    });
+  };
+
+  const autoCreateReminder = async () => {
+    if (isEdit || !form.expiration_date) return;
+    const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+    await base44.entities.Reminder.create({
+      vehicle_id: form.vehicle_id,
+      type: 'insurance',
+      title: `${t('insurance')}: ${form.company} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
+      due_date: form.reminder_date || form.expiration_date,
+    });
+  };
+
   const mutation = useMutation({
-    mutationFn: (d) => isEdit ? base44.entities.InsurancePolicy.update(record.id, d) : base44.entities.InsurancePolicy.create(d),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['insurances'] }); onClose(); }
+    mutationFn: async (d) => isEdit ? await base44.entities.InsurancePolicy.update(record.id, d) : await base44.entities.InsurancePolicy.create(d),
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['insurances'] });
+      await autoCreateExpense();
+      await autoCreateReminder();
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      onClose();
+    }
   });
   const handleSubmit = (e) => { e.preventDefault(); mutation.mutate({ ...form, cost: form.cost ? Number(form.cost) : undefined }); };
 
@@ -60,6 +95,14 @@ function InsuranceForm({ open, onClose, record, vehicles }) {
             <div><Label>{t('expiration_date')}</Label><Input type="date" value={form.expiration_date} onChange={e => set('expiration_date', e.target.value)} required /></div>
           </div>
           <div><Label>{t('cost')} (€)</Label><Input type="number" step="0.01" value={form.cost} onChange={e => set('cost', e.target.value)} /></div>
+          <AttachmentsUploader urls={form.photos} onChange={v => set('photos', v)} label={t('receipt_documents')} showCamera />
+          {!isEdit && (
+            <div>
+              <Label>{t('reminder_date')}</Label>
+              <Input type="date" value={form.reminder_date} onChange={e => set('reminder_date', e.target.value)} />
+              <p className="text-xs text-muted-foreground mt-1">{t('auto_reminder_hint') || 'A reminder will be created for this date'}</p>
+            </div>
+          )}
           <div><Label>{t('notes_label')}</Label><Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} /></div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>{t('cancel')}</Button>

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import VehicleSelector from '@/components/shared/VehicleSelector';
+import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
 
 const serviceTypes = ['oil_change', 'filters', 'brake_service', 'battery_replacement', 'timing_belt', 'ac_service', 'major_service', 'other'];
 
@@ -16,6 +17,10 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const isEdit = !!record;
+
+  const oneYearLater = new Date();
+  oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+  const defaultReminderDate = oneYearLater.toISOString().split('T')[0];
 
   const [form, setForm] = useState({
     vehicle_id: record?.vehicle_id || '',
@@ -25,13 +30,50 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
     service_center: record?.service_center || '',
     cost: record?.cost || '',
     notes: record?.notes || '',
+    photos: record?.photos || [],
+    reminder_date: defaultReminderDate,
   });
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
+  const autoCreateExpense = async (serviceRecord) => {
+    if (!form.cost || isEdit) return;
+    const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+    await base44.entities.Expense.create({
+      vehicle_id: form.vehicle_id,
+      date: form.date,
+      amount: Number(form.cost),
+      category: 'service',
+      notes: `${t('service')}: ${t(form.service_type)}${vehicle ? ' — ' + (vehicle.name || vehicle.make + ' ' + vehicle.model) : ''}`,
+    });
+  };
+
+  const autoCreateReminder = async (serviceRecord) => {
+    if (isEdit) return;
+    const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+    await base44.entities.Reminder.create({
+      vehicle_id: form.vehicle_id,
+      type: 'service',
+      title: `${t('service')}: ${t(form.service_type)} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
+      due_date: form.reminder_date,
+    });
+  };
+
   const mutation = useMutation({
-    mutationFn: (data) => isEdit ? base44.entities.ServiceRecord.update(record.id, data) : base44.entities.ServiceRecord.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['services'] }); onClose(); }
+    mutationFn: async (data) => {
+      const result = isEdit
+        ? await base44.entities.ServiceRecord.update(record.id, data)
+        : await base44.entities.ServiceRecord.create(data);
+      return result;
+    },
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+      await autoCreateExpense(data);
+      await autoCreateReminder(data);
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      onClose();
+    }
   });
 
   const handleSubmit = (e) => {
@@ -83,6 +125,19 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
               <Input type="number" value={form.mileage} onChange={e => set('mileage', e.target.value)} />
             </div>
           </div>
+          <AttachmentsUploader
+            urls={form.photos}
+            onChange={v => set('photos', v)}
+            label={t('receipt_documents')}
+            showCamera
+          />
+          {!isEdit && (
+            <div>
+              <Label>{t('reminder_date')}</Label>
+              <Input type="date" value={form.reminder_date} onChange={e => set('reminder_date', e.target.value)} />
+              <p className="text-xs text-muted-foreground mt-1">{t('auto_reminder_hint') || 'A reminder will be created for this date'}</p>
+            </div>
+          )}
           <div>
             <Label>{t('notes_label')}</Label>
             <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} />

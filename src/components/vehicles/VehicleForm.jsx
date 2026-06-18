@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Car, Bike, Upload, FileText, X } from 'lucide-react';
+import { Car, Bike, Upload, FileText, X, Image, Camera } from 'lucide-react';
 
 const fuelTypes = ['gasoline', 'diesel', 'electric', 'hybrid', 'lpg', 'cng'];
 const purchaseMethods = ['dealer', 'private_seller', 'company'];
@@ -40,6 +40,7 @@ export default function VehicleForm({ open, onClose, vehicle }) {
     purchase_notes: vehicle?.purchase_notes || '',
     purchase_documents: vehicle?.purchase_documents || [],
     current_mileage: vehicle?.current_mileage || '',
+    photos: vehicle?.photos || [],
   });
 
   const [uploading, setUploading] = useState(false);
@@ -82,6 +83,24 @@ export default function VehicleForm({ open, onClose, vehicle }) {
     set('purchase_documents', form.purchase_documents.filter((_, i) => i !== idx));
   };
 
+  const handlePhotoUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setUploading(true);
+    const urls = [...form.photos];
+    for (const file of files) {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      urls.push(file_url);
+    }
+    set('photos', urls);
+    setUploading(false);
+    e.target.value = '';
+  };
+
+  const removePhoto = (idx) => {
+    set('photos', form.photos.filter((_, i) => i !== idx));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
@@ -119,6 +138,39 @@ export default function VehicleForm({ open, onClose, vehicle }) {
             <div><Label>{t('horsepower')}</Label><Input type="number" value={form.horsepower} onChange={e => set('horsepower', e.target.value)} /></div>
             <div><Label>{t('color')}</Label><Input value={form.color} onChange={e => set('color', e.target.value)} /></div>
             <div className="col-span-2"><Label>{t('current_mileage')} (km)</Label><Input type="number" value={form.current_mileage} onChange={e => set('current_mileage', e.target.value)} /></div>
+          </div>
+
+          {/* Photos */}
+          <div>
+            <Label>{t('vehicle_photo')}</Label>
+            <div className="flex gap-2 mt-1">
+              <label>
+                <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading}>
+                  {uploading ? <span className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <Image className="w-4 h-4" />}
+                  {t('upload_file')}
+                </Button>
+              </label>
+              <label>
+                <input type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} className="hidden" />
+                <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading}>
+                  <Camera className="w-4 h-4" />
+                  {t('take_photo') || 'Take Photo'}
+                </Button>
+              </label>
+            </div>
+            {form.photos.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {form.photos.map((url, idx) => (
+                  <div key={idx} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-border bg-muted">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button type="button" onClick={() => removePhoto(idx)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Purchase Section */}
