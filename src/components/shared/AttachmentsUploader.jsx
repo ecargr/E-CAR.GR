@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,8 @@ export default function AttachmentsUploader({ urls = [], onChange, label, showCa
   const { t } = useI18n();
   const [uploading, setUploading] = useState(false);
   const [localUrls, setLocalUrls] = useState(Array.isArray(urls) ? urls : urls ? [urls] : []);
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -37,25 +39,23 @@ export default function AttachmentsUploader({ urls = [], onChange, label, showCa
     <div className="space-y-2">
       {label && <Label>{label}</Label>}
       <div className="flex flex-wrap gap-2">
-        <label>
-          <input type="file" multiple accept="image/*,.pdf" onChange={handleFileUpload} className="hidden" />
-          <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading}>
-            {uploading ? (
-              <span className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" />
-            ) : (
-              <Upload className="w-4 h-4" />
-            )}
-            {t('upload_file')}
-          </Button>
-        </label>
+        <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf" onChange={handleFileUpload} className="hidden" />
+        <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+          {uploading ? (
+            <span className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" />
+          ) : (
+            <Upload className="w-4 h-4" />
+          )}
+          {t('upload_file')}
+        </Button>
         {showCamera && (
-          <label>
-            <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
-            <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading}>
+          <>
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading} onClick={() => cameraInputRef.current?.click()}>
               <Camera className="w-4 h-4" />
               {t('take_photo') || 'Take Photo'}
             </Button>
-          </label>
+          </>
         )}
       </div>
       {localUrls.length > 0 && (

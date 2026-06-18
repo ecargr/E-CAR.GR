@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +44,9 @@ export default function VehicleForm({ open, onClose, vehicle }) {
   });
 
   const [uploading, setUploading] = useState(false);
+  const photoFileRef = useRef(null);
+  const photoCameraRef = useRef(null);
+  const docFileRef = useRef(null);
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -144,20 +147,16 @@ export default function VehicleForm({ open, onClose, vehicle }) {
           <div>
             <Label>{t('vehicle_photo')}</Label>
             <div className="flex gap-2 mt-1">
-              <label>
-                <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading}>
-                  {uploading ? <span className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <Image className="w-4 h-4" />}
-                  {t('upload_file')}
-                </Button>
-              </label>
-              <label>
-                <input type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} className="hidden" />
-                <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading}>
-                  <Camera className="w-4 h-4" />
-                  {t('take_photo') || 'Take Photo'}
-                </Button>
-              </label>
+              <input ref={photoFileRef} type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+              <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading} onClick={() => photoFileRef.current?.click()}>
+                {uploading ? <span className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <Image className="w-4 h-4" />}
+                {t('upload_file')}
+              </Button>
+              <input ref={photoCameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} className="hidden" />
+              <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading} onClick={() => photoCameraRef.current?.click()}>
+                <Camera className="w-4 h-4" />
+                {t('take_photo') || 'Take Photo'}
+              </Button>
             </div>
             {form.photos.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
@@ -203,13 +202,11 @@ export default function VehicleForm({ open, onClose, vehicle }) {
           <div>
             <Label>{t('purchase_documents')}</Label>
             <div className="flex gap-2 mt-1">
-              <label>
-                <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={handleDocUpload} className="hidden" />
-                <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading}>
-                  {uploading ? <span className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
-                  {t('upload_file')}
-                </Button>
-              </label>
+              <input ref={docFileRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={handleDocUpload} className="hidden" />
+              <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading} onClick={() => docFileRef.current?.click()}>
+                {uploading ? <span className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
+                {t('upload_file')}
+              </Button>
             </div>
             {form.purchase_documents.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
