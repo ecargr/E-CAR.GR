@@ -159,11 +159,11 @@ export default function VehicleForm({ open, onClose, vehicle }) {
               </Button>
             </div>
             {form.photos.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-2">
                 {form.photos.map((url, idx) => (
-                  <div key={idx} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-border bg-muted">
+                  <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
                     <img src={url} alt="" className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => removePhoto(idx)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <button type="button" onClick={() => removePhoto(idx)} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <X className="w-3 h-3" />
                     </button>
                   </div>

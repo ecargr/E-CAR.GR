@@ -58,7 +58,7 @@ export default function Vehicles() {
               const hasPurchaseInfo = v.seller_name || v.purchase_method;
               return (
                 <div key={v.id} className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all group">
-                  <div className="h-36 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative">
+                  <div className="aspect-[4/3] bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center relative overflow-hidden">
                     {v.photos?.[0] ? (
                       <img src={v.photos[0]} alt={v.name} className="w-full h-full object-cover" />
                     ) : (
@@ -133,6 +133,15 @@ export default function Vehicles() {
                 <DialogTitle>{detailVehicle.name} — {t('vehicle_details')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
+                {(detailVehicle.photos || []).length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {detailVehicle.photos.map((url, idx) => (
+                      <div key={idx} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                        <img src={url} alt={`${detailVehicle.name} photo ${idx + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div><span className="text-muted-foreground">{t('make')}:</span> <span className="font-medium">{detailVehicle.make}</span></div>
                   <div><span className="text-muted-foreground">{t('model')}:</span> <span className="font-medium">{detailVehicle.model}</span></div>
