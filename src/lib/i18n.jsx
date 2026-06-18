@@ -86,6 +86,9 @@ const translations = {
     vehicle_name_placeholder: 'e.g. My Daily Driver, Family Car...',
     choose_or_type_make: 'Choose or type a brand...',
     choose_or_type_model: 'Choose or type a model...',
+    transmission: 'Transmission',
+    manual: 'Manual',
+    automatic: 'Automatic',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -180,6 +183,9 @@ const translations = {
     vehicle_name_placeholder: 'π.χ. Το Καθημερινό μου, Οικογενειακό...',
     choose_or_type_make: 'Επιλέξτε ή πληκτρολογήστε μάρκα...',
     choose_or_type_model: 'Επιλέξτε ή πληκτρολογήστε μοντέλο...',
+    transmission: 'Κιβώτιο Ταχυτήτων',
+    manual: 'Χειροκίνητο',
+    automatic: 'Αυτόματο',
   }
 };
 

@@ -46,6 +46,14 @@
         "cng"
       ]
     },
+    "transmission": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "automatic"
+      ],
+      "description": "Transmission type"
+    },
     "engine_capacity": {
       "type": "number",
       "description": "Engine capacity in cc"

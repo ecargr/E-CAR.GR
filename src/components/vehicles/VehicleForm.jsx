@@ -31,6 +31,7 @@ export default function VehicleForm({ open, onClose, vehicle }) {
     model: vehicle?.model || '',
     year: vehicle?.year || '',
     fuel_type: vehicle?.fuel_type || 'gasoline',
+    transmission: vehicle?.transmission || '',
     engine_capacity: vehicle?.engine_capacity || '',
     horsepower: vehicle?.horsepower || '',
     color: vehicle?.color || '',
@@ -151,6 +152,16 @@ export default function VehicleForm({ open, onClose, vehicle }) {
               <Select value={form.fuel_type} onValueChange={v => set('fuel_type', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{fuelTypes.map(ft => <SelectItem key={ft} value={ft}>{t(ft)}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t('transmission')}</Label>
+              <Select value={form.transmission} onValueChange={v => set('transmission', v)}>
+                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">{t('manual')}</SelectItem>
+                  <SelectItem value="automatic">{t('automatic')}</SelectItem>
+                </SelectContent>
               </Select>
             </div>
             <div><Label>{t('engine_capacity')} (cc)</Label><Input type="number" value={form.engine_capacity} onChange={e => set('engine_capacity', e.target.value)} /></div>
