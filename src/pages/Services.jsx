@@ -8,7 +8,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import ServiceForm from '@/components/services/ServiceForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X } from 'lucide-react';
+import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X, Search, Calendar, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,8 @@ export default function Services() {
   const [vehicleFilter, setVehicleFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [serviceCenterSearch, setServiceCenterSearch] = useState('');
+  const [showUpcoming, setShowUpcoming] = useState(false);
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: services = [], isLoading, refetch } = useQuery({ queryKey: ['services'], queryFn: () => base44.entities.ServiceRecord.list('-date', 200) });
@@ -50,10 +52,19 @@ export default function Services() {
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
 
+  const today = new Date().toISOString().split('T')[0];
+
   const filtered = (() => {
     let result = vehicleFilter === 'all' ? services : services.filter(s => s.vehicle_id === vehicleFilter);
     if (dateFrom) result = result.filter(s => s.date >= dateFrom);
     if (dateTo) result = result.filter(s => s.date <= dateTo);
+    if (serviceCenterSearch.trim()) {
+      const q = serviceCenterSearch.toLowerCase();
+      result = result.filter(s => s.service_center?.toLowerCase().includes(q));
+    }
+    if (showUpcoming) {
+      result = result.filter(s => s.next_service_date && s.next_service_date >= today);
+    }
     return result;
   })();
 
@@ -64,6 +75,20 @@ export default function Services() {
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
           <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
+          <div className="relative w-full sm:w-48">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              placeholder={t('search_service_center')}
+              value={serviceCenterSearch}
+              onChange={e => setServiceCenterSearch(e.target.value)}
+              className="pl-8 pr-8 text-xs"
+            />
+            {serviceCenterSearch && (
+              <button onClick={() => setServiceCenterSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-xs" placeholder={t('date_from')} />
             <span className="text-xs text-muted-foreground">—</span>
@@ -74,6 +99,15 @@ export default function Services() {
               </button>
             )}
           </div>
+          <Button
+            variant={showUpcoming ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowUpcoming(!showUpcoming)}
+            className="gap-1.5 text-xs"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            {t('upcoming_services')}
+          </Button>
         </div>
 
         {filtered.length === 0 && !isLoading ? (
@@ -118,6 +152,17 @@ export default function Services() {
                       )}
                       {svc.mileage && (
                         <Badge variant="secondary" className="text-xs gap-1"><Gauge className="w-2.5 h-2.5" />{svc.mileage.toLocaleString()} km</Badge>
+                      )}
+                      {svc.next_service_date && (
+                        <Badge variant="secondary" className="text-xs gap-1 bg-primary/10 text-primary">
+                          <Calendar className="w-2.5 h-2.5" />
+                          {t('next_service_date')}: {formatDate(svc.next_service_date, locale)}
+                        </Badge>
+                      )}
+                      {svc.next_service_km && (
+                        <Badge variant="secondary" className="text-xs gap-1">
+                          <Gauge className="w-2.5 h-2.5" />{t('next_service_km')}: {svc.next_service_km.toLocaleString()} km
+                        </Badge>
                       )}
                     </div>
                     {svc.notes && <p className="text-xs text-muted-foreground mt-2">{svc.notes}</p>}

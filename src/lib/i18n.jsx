@@ -98,6 +98,11 @@ const translations = {
     date_from: 'From',
     date_to: 'To',
     others_group: 'Others',
+    next_service_date: 'Next Service Date',
+    next_service_km: 'Next Service Km',
+    upcoming_services: 'Upcoming',
+    search_service_center: 'Search service center...',
+    service_center_filter: 'Service Center',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -204,6 +209,11 @@ const translations = {
     date_from: 'Από',
     date_to: 'Έως',
     others_group: 'Άλλα',
+    next_service_date: 'Ημ/νία Επόμενου Σέρβις',
+    next_service_km: 'Χλμ Επόμενου Σέρβις',
+    upcoming_services: 'Επερχόμενα',
+    search_service_center: 'Αναζήτηση συνεργείου...',
+    service_center_filter: 'Συνεργείο',
   }
 };
 

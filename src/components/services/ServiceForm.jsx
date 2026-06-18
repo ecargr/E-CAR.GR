@@ -32,6 +32,8 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
     notes: record?.notes || '',
     photos: record?.photos || [],
     reminder_date: defaultReminderDate,
+    next_service_date: record?.next_service_date || '',
+    next_service_km: record?.next_service_km || '',
   });
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
@@ -59,6 +61,14 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
       title: `${t('service')}: ${t(form.service_type)} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
       due_date: form.reminder_date,
     });
+    if (form.next_service_date) {
+      await base44.entities.Reminder.create({
+        vehicle_id: form.vehicle_id,
+        type: 'service',
+        title: `${t('next_service_date')}: ${t(form.service_type)} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
+        due_date: form.next_service_date,
+      });
+    }
   };
 
   const mutation = useMutation({
@@ -84,6 +94,7 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
       ...form,
       mileage: form.mileage ? Number(form.mileage) : undefined,
       cost: form.cost ? Number(form.cost) : undefined,
+      next_service_km: form.next_service_km ? Number(form.next_service_km) : undefined,
     });
   };
 
@@ -133,6 +144,19 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
             label={t('receipt_documents')}
             showCamera
           />
+          <div className="border-t border-border pt-4">
+            <p className="text-sm font-medium mb-2">{t('next_service_date')}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{t('next_service_date')}</Label>
+                <Input type="date" value={form.next_service_date} onChange={e => set('next_service_date', e.target.value)} />
+              </div>
+              <div>
+                <Label>{t('next_service_km')}</Label>
+                <Input type="number" value={form.next_service_km} onChange={e => set('next_service_km', e.target.value)} placeholder="15000" />
+              </div>
+            </div>
+          </div>
           {!isEdit && (
             <div>
               <Label>{t('reminder_date')}</Label>

@@ -42,6 +42,15 @@
     },
     "invoice_url": {
       "type": "string"
+    },
+    "next_service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Next service due date"
+    },
+    "next_service_km": {
+      "type": "number",
+      "description": "Next service due mileage"
     }
   },
   "required": [
