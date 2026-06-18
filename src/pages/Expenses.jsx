@@ -27,6 +27,8 @@ export default function Expenses() {
   const [deleteId, setDeleteId] = useState(null);
   const [vehicleFilter, setVehicleFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [viewDoc, setViewDoc] = useState(null);
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
@@ -67,8 +69,10 @@ export default function Expenses() {
         );
       });
     }
+    if (dateFrom) result = result.filter(e => e.date >= dateFrom);
+    if (dateTo) result = result.filter(e => e.date <= dateTo);
     return result;
-  }, [expenses, vehicleFilter, searchQuery, t]);
+  }, [expenses, vehicleFilter, searchQuery, dateFrom, dateTo, t]);
 
   const totalFiltered = filtered.reduce((s, e) => s + (e.amount || 0), 0);
   const withoutDocs = filtered.filter(e => {
@@ -81,7 +85,7 @@ export default function Expenses() {
       <div className="p-4 lg:p-8 max-w-7xl mx-auto">
         <PageHeader title={t('expenses')} action={() => setShowForm(true)} actionLabel={t('add_expense')} />
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4 flex-wrap">
           <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -93,6 +97,16 @@ export default function Expenses() {
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-xs" placeholder={t('date_from')} />
+            <span className="text-xs text-muted-foreground">—</span>
+            <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36 text-xs" placeholder={t('date_to')} />
+            {(dateFrom || dateTo) && (
+              <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-muted-foreground hover:text-foreground" aria-label="Clear date range">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -143,7 +157,7 @@ export default function Expenses() {
                       return (
                         <tr key={exp.id} className="hover:bg-muted/30 transition-colors">
                           <td className="px-4 py-3 text-sm whitespace-nowrap">{formatDate(exp.date, locale)}</td>
-                          <td className="px-4 py-3 text-sm">{vehicle?.name || vehicle?.make || '—'}</td>
+                          <td className="px-4 py-3 text-sm">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}`.trim() || vehicle.name || '—' : '—'}</td>
                           <td className="px-4 py-3">
                             <Badge variant="secondary" className={cn("text-xs", categoryColors[exp.category])}>{t(catKey)}</Badge>
                           </td>
@@ -198,7 +212,7 @@ export default function Expenses() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{vehicle?.name || vehicle?.make || '—'}</p>
+                          <p className="text-sm font-medium truncate">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}`.trim() || vehicle.name || '—' : '—'}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0", categoryColors[exp.category])}>{t(catKey)}</Badge>
                             {exp.supplier && <span className="text-xs text-muted-foreground truncate">{exp.supplier}</span>}

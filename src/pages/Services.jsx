@@ -8,7 +8,8 @@ import EmptyState from '@/components/shared/EmptyState';
 import ServiceForm from '@/components/services/ServiceForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge } from 'lucide-react';
+import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -23,6 +24,8 @@ export default function Services() {
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [vehicleFilter, setVehicleFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: services = [], isLoading, refetch } = useQuery({ queryKey: ['services'], queryFn: () => base44.entities.ServiceRecord.list('-date', 200) });
@@ -47,15 +50,30 @@ export default function Services() {
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
 
-  const filtered = vehicleFilter === 'all' ? services : services.filter(s => s.vehicle_id === vehicleFilter);
+  const filtered = (() => {
+    let result = vehicleFilter === 'all' ? services : services.filter(s => s.vehicle_id === vehicleFilter);
+    if (dateFrom) result = result.filter(s => s.date >= dateFrom);
+    if (dateTo) result = result.filter(s => s.date <= dateTo);
+    return result;
+  })();
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="h-full">
       <div className="p-4 lg:p-8 max-w-7xl mx-auto">
         <PageHeader title={t('service_history')} action={() => setShowForm(true)} actionLabel={t('add_service')} />
 
-        <div className="mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
           <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
+          <div className="flex items-center gap-2">
+            <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-xs" placeholder={t('date_from')} />
+            <span className="text-xs text-muted-foreground">—</span>
+            <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36 text-xs" placeholder={t('date_to')} />
+            {(dateFrom || dateTo) && (
+              <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-muted-foreground hover:text-foreground" aria-label="Clear date range">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {filtered.length === 0 && !isLoading ? (
@@ -74,7 +92,7 @@ export default function Services() {
                       <div>
                         <h3 className="font-semibold text-sm">{t(svc.service_type)}</h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {vehicle?.name || '—'} · {formatDate(svc.date, locale)}
+                          {vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}`.trim() || vehicle.name || '—' : '—'} · {formatDate(svc.date, locale)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

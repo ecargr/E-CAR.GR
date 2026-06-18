@@ -95,6 +95,8 @@ const translations = {
     mileage_low_high: 'Km: Low to High',
     mileage_high_low: 'Km: High to Low',
     reg_date_newest: 'Reg. Date: Newest First',
+    date_from: 'From',
+    date_to: 'To',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -198,6 +200,8 @@ const translations = {
     mileage_low_high: 'Χλμ: Χαμηλά-Υψηλά',
     mileage_high_low: 'Χλμ: Υψηλά-Χαμηλά',
     reg_date_newest: 'Ημ/νία Ταξιν.: Νεότερα Πρώτα',
+    date_from: 'Από',
+    date_to: 'Έως',
   }
 };
 
