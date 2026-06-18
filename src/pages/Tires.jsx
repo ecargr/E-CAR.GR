@@ -42,6 +42,10 @@ function TireForm({ open, onClose, record, vehicles }) {
     notes: record?.notes || '',
     photos: record?.photos || [],
     reminder_date: defaultReminderDate,
+    front_tire_date: record?.front_tire_date || '',
+    back_tire_date: record?.back_tire_date || '',
+    front_tire_expiry: record?.front_tire_expiry || '',
+    back_tire_expiry: record?.back_tire_expiry || '',
   });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -68,6 +72,31 @@ function TireForm({ open, onClose, record, vehicles }) {
       title: `${t('tires')}: ${form.brand} ${form.model || ''} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
       due_date: form.reminder_date,
     });
+    // Auto-create reminders for tyre expirations
+    const offsets = [
+      { label: '2 months', days: 60 },
+      { label: '1 month', days: 30 },
+      { label: '10 days', days: 10 },
+      { label: '1 day', days: 1 },
+    ];
+    for (const pos of ['front', 'back']) {
+      const expiryDate = form[`${pos}_tire_expiry`];
+      if (!expiryDate) continue;
+      const expiry = new Date(expiryDate);
+      for (const offset of offsets) {
+        const reminderDate = new Date(expiry);
+        reminderDate.setDate(reminderDate.getDate() - offset.days);
+        const reminderStr = reminderDate.toISOString().split('T')[0];
+        if (reminderStr > new Date().toISOString().split('T')[0]) {
+          await base44.entities.Reminder.create({
+            vehicle_id: form.vehicle_id,
+            type: 'tire',
+            title: `${t(pos === 'front' ? 'front_tire_date' : 'back_tire_date')} — ${offset.label} before expiry`,
+            due_date: reminderStr,
+          });
+        }
+      }
+    }
   };
 
   const mutation = useMutation({
@@ -93,8 +122,8 @@ function TireForm({ open, onClose, record, vehicles }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div><Label>{t('vehicles')}</Label><VehicleSelector vehicles={vehicles} value={form.vehicle_id} onChange={v => set('vehicle_id', v)} showAll={false} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>{t('tire_brand')}</Label><Input value={form.brand} onChange={e => set('brand', e.target.value)} required /></div>
-            <div><Label>{t('tire_model')}</Label><Input value={form.model} onChange={e => set('model', e.target.value)} /></div>
+            <div><Label>{t('tire_brand')} ({t('optional')})</Label><Input value={form.brand} onChange={e => set('brand', e.target.value)} /></div>
+            <div><Label>{t('tire_model')} ({t('optional')})</Label><Input value={form.model} onChange={e => set('model', e.target.value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div><Label>{t('tire_size')}</Label><Input value={form.size} onChange={e => set('size', e.target.value)} placeholder="205/55R16" /></div>
@@ -116,6 +145,32 @@ function TireForm({ open, onClose, record, vehicles }) {
             <div><Label>{t('mileage_at_installation')}</Label><Input type="number" value={form.mileage_at_installation} onChange={e => set('mileage_at_installation', e.target.value)} /></div>
           </div>
           <div><Label>{t('cost')} (€)</Label><Input type="number" step="0.01" value={form.cost} onChange={e => set('cost', e.target.value)} /></div>
+          <div className="border-t border-border pt-4">
+            <p className="text-sm font-medium mb-2">{t('front_tire_date')}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{t('front_tire_date')} (MM/YY)</Label>
+                <Input value={form.front_tire_date} onChange={e => set('front_tire_date', e.target.value)} placeholder="02/25" />
+              </div>
+              <div>
+                <Label>{t('front_tire_expiry')}</Label>
+                <Input type="date" value={form.front_tire_expiry} onChange={e => set('front_tire_expiry', e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-border pt-4">
+            <p className="text-sm font-medium mb-2">{t('back_tire_date')}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{t('back_tire_date')} (MM/YY)</Label>
+                <Input value={form.back_tire_date} onChange={e => set('back_tire_date', e.target.value)} placeholder="02/25" />
+              </div>
+              <div>
+                <Label>{t('back_tire_expiry')}</Label>
+                <Input type="date" value={form.back_tire_expiry} onChange={e => set('back_tire_expiry', e.target.value)} />
+              </div>
+            </div>
+          </div>
           <AttachmentsUploader urls={form.photos} onChange={v => set('photos', v)} label={t('receipt_documents')} showCamera />
           {!isEdit && (
             <div>
@@ -176,9 +231,9 @@ export default function Tires() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-semibold text-sm">{tire.brand} {tire.model}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'} · {t(tire.action_type)}</p>
-                    </div>
+                        <h3 className="font-semibold text-sm">{tire.brand || tire.size || t('tires')} {tire.model}</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'} · {t(tire.action_type)}</p>
+                      </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -192,6 +247,12 @@ export default function Tires() {
                     <Badge variant="secondary" className={`text-xs ${seasonBadgeColor[tire.seasonal_type] || ''}`}>{t(tire.seasonal_type)}</Badge>
                     {tire.installation_date && <Badge variant="secondary" className="text-xs">{formatDate(tire.installation_date, locale)}</Badge>}
                     {tire.mileage_at_installation && <Badge variant="secondary" className="text-xs gap-1"><Gauge className="w-2.5 h-2.5" />{tire.mileage_at_installation.toLocaleString()} km</Badge>}
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {tire.front_tire_date && <Badge variant="secondary" className="text-xs">{t('front_tire_date')}: {tire.front_tire_date}</Badge>}
+                    {tire.front_tire_expiry && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">{t('front_tire_expiry')}: {formatDate(tire.front_tire_expiry, locale)}</Badge>}
+                    {tire.back_tire_date && <Badge variant="secondary" className="text-xs">{t('back_tire_date')}: {tire.back_tire_date}</Badge>}
+                    {tire.back_tire_expiry && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">{t('back_tire_expiry')}: {formatDate(tire.back_tire_expiry, locale)}</Badge>}
                   </div>
                   {tire.cost && <p className="text-sm font-bold mt-2">{formatCurrency(tire.cost, locale)}</p>}
                 </div>

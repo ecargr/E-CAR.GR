@@ -8,10 +8,11 @@ import EmptyState from '@/components/shared/EmptyState';
 import ServiceForm from '@/components/services/ServiceForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X, Search, Calendar, Clock } from 'lucide-react';
+import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X, Calendar, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useSearchParams } from 'react-router-dom';
@@ -26,7 +27,7 @@ export default function Services() {
   const [vehicleFilter, setVehicleFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [serviceCenterSearch, setServiceCenterSearch] = useState('');
+  const [serviceCenterFilter, setServiceCenterFilter] = useState('all');
   const [showUpcoming, setShowUpcoming] = useState(false);
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
@@ -52,15 +53,16 @@ export default function Services() {
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
 
+  const serviceCenters = [...new Set(services.map(s => s.service_center).filter(Boolean))].sort();
+
   const today = new Date().toISOString().split('T')[0];
 
   const filtered = (() => {
     let result = vehicleFilter === 'all' ? services : services.filter(s => s.vehicle_id === vehicleFilter);
     if (dateFrom) result = result.filter(s => s.date >= dateFrom);
     if (dateTo) result = result.filter(s => s.date <= dateTo);
-    if (serviceCenterSearch.trim()) {
-      const q = serviceCenterSearch.toLowerCase();
-      result = result.filter(s => s.service_center?.toLowerCase().includes(q));
+    if (serviceCenterFilter !== 'all') {
+      result = result.filter(s => s.service_center === serviceCenterFilter);
     }
     if (showUpcoming) {
       result = result.filter(s => s.next_service_date && s.next_service_date >= today);
@@ -75,20 +77,15 @@ export default function Services() {
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
           <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
-          <div className="relative w-full sm:w-48">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input
-              placeholder={t('search_service_center')}
-              value={serviceCenterSearch}
-              onChange={e => setServiceCenterSearch(e.target.value)}
-              className="pl-8 pr-8 text-xs"
-            />
-            {serviceCenterSearch && (
-              <button onClick={() => setServiceCenterSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+          <Select value={serviceCenterFilter} onValueChange={setServiceCenterFilter}>
+            <SelectTrigger className="w-44 text-xs">
+              <SelectValue placeholder={t('service_center_filter')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('all')} {t('service_center_filter')}</SelectItem>
+              {serviceCenters.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <div className="flex items-center gap-2">
             <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-xs" placeholder={t('date_from')} />
             <span className="text-xs text-muted-foreground">—</span>

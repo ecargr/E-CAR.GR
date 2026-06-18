@@ -43,11 +43,28 @@
     },
     "cost": {
       "type": "number"
+    },
+    "front_tire_date": {
+      "type": "string",
+      "description": "Front tire manufacturing date (MM/YY)"
+    },
+    "back_tire_date": {
+      "type": "string",
+      "description": "Back tire manufacturing date (MM/YY)"
+    },
+    "front_tire_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "Front tire expiration date"
+    },
+    "back_tire_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "Back tire expiration date"
     }
   },
   "required": [
     "vehicle_id",
-    "brand",
     "action_type"
   ]
 }

@@ -100,9 +100,13 @@ const translations = {
     others_group: 'Others',
     next_service_date: 'Next Service Date',
     next_service_km: 'Next Service Km',
-    upcoming_services: 'Upcoming',
+    upcoming_services: 'Upcoming Services',
     search_service_center: 'Search service center...',
     service_center_filter: 'Service Center',
+    front_tire_date: 'Front Tires Date',
+    back_tire_date: 'Back Tires Date',
+    front_tire_expiry: 'Front Tires Expiry',
+    back_tire_expiry: 'Back Tires Expiry',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -211,9 +215,13 @@ const translations = {
     others_group: 'Άλλα',
     next_service_date: 'Ημ/νία Επόμενου Σέρβις',
     next_service_km: 'Χλμ Επόμενου Σέρβις',
-    upcoming_services: 'Επερχόμενα',
+    upcoming_services: 'Επερχόμενα Σέρβις',
     search_service_center: 'Αναζήτηση συνεργείου...',
     service_center_filter: 'Συνεργείο',
+    front_tire_date: 'Ημ/νία Μπροστά Ελαστικών',
+    back_tire_date: 'Ημ/νία Πίσω Ελαστικών',
+    front_tire_expiry: 'Λήξη Μπροστά Ελαστικών',
+    back_tire_expiry: 'Λήξη Πίσω Ελαστικών',
   }
 };
 
