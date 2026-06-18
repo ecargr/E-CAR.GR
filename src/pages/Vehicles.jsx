@@ -85,17 +85,22 @@ export default function Vehicles() {
                     </DropdownMenu>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-heading font-semibold text-lg">{v.name}</h3>
-                    <p className="text-sm text-muted-foreground">{v.make} {v.model} {v.year ? `(${v.year})` : ''}</p>
-                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
+                    <h3 className="font-heading font-semibold text-lg">{v.make} {v.model} {v.version ? <span className="text-sm font-normal text-muted-foreground">{v.version}</span> : ''}</h3>
+                    <p className="text-sm text-muted-foreground">{v.name || `${v.year || ''}`}</p>
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
                       {v.registration_number && (
-                        <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md font-mono font-medium">
+                        <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-mono font-bold text-sm tracking-wider">
                           {v.registration_number}
                         </span>
                       )}
-                      {v.fuel_type && <span className="flex items-center gap-1">{t(v.fuel_type)}</span>}
                       {v.current_mileage != null && (
-                        <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />{v.current_mileage.toLocaleString()} km</span>
+                        <span className="flex items-center gap-1.5 text-sm font-semibold">
+                          <Gauge className="w-4 h-4 text-muted-foreground" />
+                          {v.current_mileage.toLocaleString()} km
+                        </span>
+                      )}
+                      {v.fuel_type && (
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">{t(v.fuel_type)}</span>
                       )}
                     </div>
                     {hasPurchaseInfo && (
@@ -130,7 +135,7 @@ export default function Vehicles() {
           <Dialog open={!!detailVehicle} onOpenChange={() => setDetailVehicle(null)}>
             <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{detailVehicle.name} — {t('vehicle_details')}</DialogTitle>
+                <DialogTitle>{detailVehicle.make} {detailVehicle.model}{detailVehicle.version ? ` (${detailVehicle.version})` : ''} — {t('vehicle_details')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 {(detailVehicle.photos || []).length > 0 && (

@@ -80,6 +80,10 @@ const translations = {
     customize_navigation: 'Customize Navigation',
     customize_navigation_desc: 'Click a menu item to rename it. Use the arrows to reorder. Use the eye icon to show/hide items.',
     restore_defaults: 'Restore Defaults',
+    optional: 'optional',
+    version: 'Version / Trim',
+    version_placeholder: 'e.g. Sport, Limited Edition...',
+    vehicle_name_placeholder: 'e.g. My Daily Driver, Family Car...',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -168,6 +172,10 @@ const translations = {
     customize_navigation: 'Προσαρμογή Πλοήγησης',
     customize_navigation_desc: 'Κάντε κλικ σε ένα στοιχείο για μετονομασία. Χρησιμοποιήστε τα βέλη για αναδιάταξη. Χρησιμοποιήστε το εικονίδιο ματιού για εμφάνιση/απόκρυψη.',
     restore_defaults: 'Επαναφορά Προεπιλογών',
+    optional: 'προαιρετικό',
+    version: 'Έκδοση / Εξοπλισμός',
+    version_placeholder: 'π.χ. Sport, Limited Edition...',
+    vehicle_name_placeholder: 'π.χ. Το Καθημερινό μου, Οικογενειακό...',
   }
 };
 

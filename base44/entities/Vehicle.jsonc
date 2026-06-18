@@ -4,7 +4,11 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Vehicle nickname"
+      "description": "Vehicle nickname (optional)"
+    },
+    "version": {
+      "type": "string",
+      "description": "Vehicle version/trim (optional)"
     },
     "type": {
       "type": "string",
@@ -95,7 +99,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Purchase document URLs (invoice, receipt, agreement, transfer docs, import docs)"
+      "description": "Purchase document URLs"
     },
     "current_mileage": {
       "type": "number"
@@ -118,7 +122,6 @@
     }
   },
   "required": [
-    "name",
     "make",
     "model"
   ]

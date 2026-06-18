@@ -21,6 +21,7 @@ export default function VehicleForm({ open, onClose, vehicle }) {
 
   const [form, setForm] = useState({
     name: vehicle?.name || '',
+    version: vehicle?.version || '',
     type: vehicle?.type || 'car',
     registration_number: vehicle?.registration_number || '',
     vin: vehicle?.vin || '',
@@ -122,11 +123,15 @@ export default function VehicleForm({ open, onClose, vehicle }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <Label>{t('vehicle_name')}</Label>
-              <Input value={form.name} onChange={e => set('name', e.target.value)} required />
+              <Label>{t('vehicle_name')} <span className="text-muted-foreground text-xs">({t('optional')})</span></Label>
+              <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder={t('vehicle_name_placeholder')} />
             </div>
-            <div><Label>{t('make')}</Label><Input value={form.make} onChange={e => set('make', e.target.value)} required /></div>
-            <div><Label>{t('model')}</Label><Input value={form.model} onChange={e => set('model', e.target.value)} required /></div>
+            <div><Label>{t('make')} *</Label><Input value={form.make} onChange={e => set('make', e.target.value)} required /></div>
+            <div><Label>{t('model')} *</Label><Input value={form.model} onChange={e => set('model', e.target.value)} required /></div>
+            <div className="col-span-2">
+              <Label>{t('version')} <span className="text-muted-foreground text-xs">({t('optional')})</span></Label>
+              <Input value={form.version} onChange={e => set('version', e.target.value)} placeholder={t('version_placeholder')} />
+            </div>
             <div><Label>{t('year')}</Label><Input type="number" value={form.year} onChange={e => set('year', e.target.value)} /></div>
             <div><Label>{t('registration_number')}</Label><Input value={form.registration_number} onChange={e => set('registration_number', e.target.value)} /></div>
             <div className="col-span-2"><Label>{t('vin_number')}</Label><Input value={form.vin} onChange={e => set('vin', e.target.value)} /></div>
