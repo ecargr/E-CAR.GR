@@ -8,7 +8,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import ExpenseForm from '@/components/expenses/ExpenseForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Receipt, Pencil, Trash2, MoreVertical, Search, X, FileText, FileWarning, Download, Eye } from 'lucide-react';
+import { Receipt, Pencil, Trash2, MoreVertical, Search, X, FileText, FileWarning, Download, Eye, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,7 @@ export default function Expenses() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [supplierFilter, setSupplierFilter] = useState('all');
   const [viewDoc, setViewDoc] = useState(null);
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
@@ -55,6 +56,8 @@ export default function Expenses() {
 
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
+
+  const suppliers = [...new Set(expenses.map(e => e.supplier).filter(Boolean))].sort();
 
   const filtered = useMemo(() => {
     let result = vehicleFilter === 'all' ? expenses : expenses.filter(e => e.vehicle_id === vehicleFilter);
@@ -84,8 +87,11 @@ export default function Expenses() {
         result = result.filter(e => e.category === categoryFilter);
       }
     }
+    if (supplierFilter !== 'all') {
+      result = result.filter(e => e.supplier === supplierFilter);
+    }
     return result;
-  }, [expenses, vehicleFilter, searchQuery, dateFrom, dateTo, categoryFilter, t]);
+  }, [expenses, vehicleFilter, searchQuery, dateFrom, dateTo, categoryFilter, supplierFilter, t]);
 
   const totalFiltered = filtered.reduce((s, e) => s + (e.amount || 0), 0);
   const withoutDocs = filtered.filter(e => {
@@ -126,6 +132,15 @@ export default function Expenses() {
                 <SelectItem value="insurance">{t('insurance_cat')}</SelectItem>
                 <SelectItem value="kteo">{t('kteo_cat')}</SelectItem>
                 <SelectItem value="others">{t('others_group')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+              <SelectTrigger className="w-40 h-9 text-xs">
+                <SelectValue placeholder={t('supplier')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('all')} {t('supplier')}</SelectItem>
+                {suppliers.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
             <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-xs" placeholder={t('date_from')} />
