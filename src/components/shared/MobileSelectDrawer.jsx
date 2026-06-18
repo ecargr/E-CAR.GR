@@ -16,7 +16,7 @@ export default function MobileSelectDrawer({ vehicles, value, onChange, showAll 
 
   const options = [
     ...(showAll ? [{ id: 'all', name: `${t('all')} ${t('vehicles')}`, type: null }] : []),
-    ...(vehicles || []).map(v => ({ id: v.id, name: v.name || `${v.make} ${v.model}`, type: v.type }))
+    ...(vehicles || []).map(v => ({ id: v.id, name: v.name || `${v.make} ${v.model}` + (v.registration_number ? ` · ${v.registration_number}` : ''), type: v.type }))
   ];
 
   const selected = options.find(o => o.id === (value || 'all'));

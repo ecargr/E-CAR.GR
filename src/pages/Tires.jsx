@@ -53,6 +53,8 @@ function TireForm({ open, onClose, record, vehicles }) {
       date: form.installation_date || new Date().toISOString().split('T')[0],
       amount: Number(form.cost),
       category: 'tires',
+      mileage: form.mileage_at_installation ? Number(form.mileage_at_installation) : undefined,
+      supplier: form.brand || undefined,
       notes: `${t('tires')}: ${form.brand} ${form.model || ''} — ${t(form.action_type)}${vehicle ? ' — ' + (vehicle.name || vehicle.make + ' ' + vehicle.model) : ''}`,
     });
   };
@@ -175,7 +177,7 @@ export default function Tires() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="font-semibold text-sm">{tire.brand} {tire.model}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">{vehicle?.name || '—'} · {t(tire.action_type)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'} · {t(tire.action_type)}</p>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>

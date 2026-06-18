@@ -92,7 +92,7 @@ export default function Services() {
                       <div>
                         <h3 className="font-semibold text-sm">{t(svc.service_type)}</h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}`.trim() || vehicle.name || '—' : '—'} · {formatDate(svc.date, locale)}
+                          {vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'} · {formatDate(svc.date, locale)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

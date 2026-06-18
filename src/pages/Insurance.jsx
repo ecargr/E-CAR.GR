@@ -48,6 +48,7 @@ function InsuranceForm({ open, onClose, record, vehicles }) {
       date: form.start_date || new Date().toISOString().split('T')[0],
       amount: Number(form.cost),
       category: 'insurance',
+      supplier: form.company || undefined,
       notes: `${t('insurance')}: ${form.company} — ${t(form.coverage_type)}${vehicle ? ' — ' + (vehicle.name || vehicle.make + ' ' + vehicle.model) : ''}`,
     });
   };
@@ -162,7 +163,7 @@ export default function Insurance() {
                   </DropdownMenu>
                 </div>
                 <h3 className="font-semibold">{ins.company}</h3>
-                <p className="text-xs text-muted-foreground">{vehicle?.name || '—'} · {t(ins.coverage_type)}</p>
+                <p className="text-xs text-muted-foreground">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'} · {t(ins.coverage_type)}</p>
                 <div className="flex items-center gap-2 mt-3 text-xs">
                   <Calendar className="w-3 h-3 text-muted-foreground" />
                   <span>{formatDate(ins.start_date, locale)} → {formatDate(ins.expiration_date, locale)}</span>

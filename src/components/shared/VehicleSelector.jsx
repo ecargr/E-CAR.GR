@@ -24,7 +24,7 @@ export default function VehicleSelector({ vehicles, value, onChange, showAll = t
               <SelectItem key={v.id} value={v.id}>
                 <span className="flex items-center gap-2">
                   {v.type === 'motorcycle' ? <Bike className="w-3.5 h-3.5" /> : <Car className="w-3.5 h-3.5" />}
-                  {v.name || `${v.make} ${v.model}${v.version ? ` (${v.version})` : ''}`}
+                  {v.name || `${v.make} ${v.model}${v.registration_number ? ` · ${v.registration_number}` : ''}`}
                 </span>
               </SelectItem>
             ))}

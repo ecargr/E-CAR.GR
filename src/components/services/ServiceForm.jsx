@@ -44,6 +44,8 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
       date: form.date,
       amount: Number(form.cost),
       category: 'service',
+      mileage: form.mileage ? Number(form.mileage) : undefined,
+      supplier: form.service_center || undefined,
       notes: `${t('service')}: ${t(form.service_type)}${vehicle ? ' — ' + (vehicle.name || vehicle.make + ' ' + vehicle.model) : ''}`,
     });
   };

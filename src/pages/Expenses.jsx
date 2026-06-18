@@ -61,7 +61,10 @@ export default function Expenses() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(e => {
+        const vehicle = vehicleMap[e.vehicle_id];
+        const vehicleStr = vehicle ? `${vehicle.make || ''} ${vehicle.model || ''} ${vehicle.registration_number || ''}`.toLowerCase() : '';
         return (
+          vehicleStr.includes(q) ||
           e.supplier?.toLowerCase().includes(q) ||
           e.invoice_number?.toLowerCase().includes(q) ||
           e.receipt_number?.toLowerCase().includes(q) ||
