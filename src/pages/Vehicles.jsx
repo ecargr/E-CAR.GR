@@ -11,6 +11,7 @@ import { Car, Bike, MoreVertical, Pencil, Trash2, Gauge, User, Building, Banknot
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -24,6 +25,7 @@ export default function Vehicles() {
   const [editVehicle, setEditVehicle] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [detailVehicle, setDetailVehicle] = useState(null);
+  const [transmissionFilter, setTransmissionFilter] = useState('all');
 
   const { data: vehicles = [], isLoading, refetch } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
 
@@ -49,11 +51,24 @@ export default function Vehicles() {
       <div className="p-4 lg:p-8 max-w-7xl mx-auto">
         <PageHeader title={t('vehicles')} action={() => setShowForm(true)} actionLabel={t('add_vehicle')} />
 
+        <div className="flex items-center gap-2 mb-4">
+          <Select value={transmissionFilter} onValueChange={setTransmissionFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t('transmission')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('all')}</SelectItem>
+              <SelectItem value="manual">{t('manual')}</SelectItem>
+              <SelectItem value="automatic">{t('automatic')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {vehicles.length === 0 && !isLoading ? (
           <EmptyState icon={Car} title={t('no_data')} actionLabel={t('add_vehicle')} action={() => setShowForm(true)} />
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {vehicles.map(v => {
+            {vehicles.filter(v => transmissionFilter === 'all' || v.transmission === transmissionFilter).map(v => {
               const hasPurchaseDocs = (v.purchase_documents || []).length > 0;
               const hasPurchaseInfo = v.seller_name || v.purchase_method;
               return (
@@ -101,6 +116,9 @@ export default function Vehicles() {
                       )}
                       {v.fuel_type && (
                         <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">{t(v.fuel_type)}</span>
+                      )}
+                      {v.transmission && (
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">{t(v.transmission)}</span>
                       )}
                     </div>
                     {hasPurchaseInfo && (
@@ -154,6 +172,7 @@ export default function Vehicles() {
                   {detailVehicle.registration_number && <div><span className="text-muted-foreground">{t('registration_number')}:</span> <span className="font-medium">{detailVehicle.registration_number}</span></div>}
                   {detailVehicle.vin && <div><span className="text-muted-foreground">{t('vin_number')}:</span> <span className="font-medium text-xs">{detailVehicle.vin}</span></div>}
                   {detailVehicle.fuel_type && <div><span className="text-muted-foreground">{t('fuel_type')}:</span> <span className="font-medium">{t(detailVehicle.fuel_type)}</span></div>}
+                  {detailVehicle.transmission && <div><span className="text-muted-foreground">{t('transmission')}:</span> <span className="font-medium">{t(detailVehicle.transmission)}</span></div>}
                   {detailVehicle.current_mileage != null && <div><span className="text-muted-foreground">{t('current_mileage')}:</span> <span className="font-medium">{detailVehicle.current_mileage.toLocaleString()} km</span></div>}
                 </div>
                 <div className="border-t border-border pt-4">
