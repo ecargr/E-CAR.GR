@@ -118,7 +118,6 @@ export default function Expenses() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('all')}</SelectItem>
-                <SelectItem value="fuel">{t('fuel')}</SelectItem>
                 <SelectItem value="service">{t('service')}</SelectItem>
                 <SelectItem value="tires">{t('tires_cat')}</SelectItem>
                 <SelectItem value="insurance">{t('insurance_cat')}</SelectItem>
