@@ -54,13 +54,11 @@
     },
     "front_tire_expiry": {
       "type": "string",
-      "format": "date",
-      "description": "Front tire expiration date"
+      "description": "Front tire expiration (MM/YY)"
     },
     "back_tire_expiry": {
       "type": "string",
-      "format": "date",
-      "description": "Back tire expiration date"
+      "description": "Back tire expiration (MM/YY)"
     }
   },
   "required": [

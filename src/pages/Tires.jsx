@@ -49,6 +49,13 @@ function TireForm({ open, onClose, record, vehicles }) {
   });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  const handleTireDate = (field, value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    let formatted = digits;
+    if (digits.length >= 2) formatted = digits.slice(0, 2) + '/' + digits.slice(2);
+    set(field, formatted);
+  };
+
   const autoCreateExpense = async () => {
     if (!form.cost || isEdit) return;
     const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
@@ -72,26 +79,22 @@ function TireForm({ open, onClose, record, vehicles }) {
       title: `${t('tires')}: ${form.brand} ${form.model || ''} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
       due_date: form.reminder_date,
     });
-    // Auto-create reminders for tyre expirations
-    const offsets = [
-      { label: '2 months', days: 60 },
-      { label: '1 month', days: 30 },
-      { label: '10 days', days: 10 },
-      { label: '1 day', days: 1 },
-    ];
+    // Auto-create reminders for tyre expirations (MM/YY format)
+    const offsets = [6, 3, 1]; // months before
     for (const pos of ['front', 'back']) {
-      const expiryDate = form[`${pos}_tire_expiry`];
-      if (!expiryDate) continue;
-      const expiry = new Date(expiryDate);
-      for (const offset of offsets) {
+      const expiryStr = form[`${pos}_tire_expiry`];
+      if (!expiryStr || !expiryStr.includes('/')) continue;
+      const [mm, yy] = expiryStr.split('/');
+      const expiry = new Date(2000 + parseInt(yy), parseInt(mm) - 1, 1);
+      for (const months of offsets) {
         const reminderDate = new Date(expiry);
-        reminderDate.setDate(reminderDate.getDate() - offset.days);
+        reminderDate.setMonth(reminderDate.getMonth() - months);
         const reminderStr = reminderDate.toISOString().split('T')[0];
         if (reminderStr > new Date().toISOString().split('T')[0]) {
           await base44.entities.Reminder.create({
             vehicle_id: form.vehicle_id,
             type: 'tire',
-            title: `${t(pos === 'front' ? 'front_tire_date' : 'back_tire_date')} — ${offset.label} before expiry`,
+            title: `${t(pos === 'front' ? 'front_tire_date' : 'back_tire_date')} — ${months} month${months > 1 ? 's' : ''} before expiry`,
             due_date: reminderStr,
           });
         }
@@ -150,11 +153,11 @@ function TireForm({ open, onClose, record, vehicles }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>{t('front_tire_date')} (MM/YY)</Label>
-                <Input value={form.front_tire_date} onChange={e => set('front_tire_date', e.target.value)} placeholder="02/25" />
+                <Input value={form.front_tire_date} onChange={e => handleTireDate('front_tire_date', e.target.value)} placeholder="02/26" maxLength={5} />
               </div>
               <div>
-                <Label>{t('front_tire_expiry')}</Label>
-                <Input type="date" value={form.front_tire_expiry} onChange={e => set('front_tire_expiry', e.target.value)} />
+                <Label>{t('front_tire_expiry')} (MM/YY)</Label>
+                <Input value={form.front_tire_expiry} onChange={e => handleTireDate('front_tire_expiry', e.target.value)} placeholder="02/28" maxLength={5} />
               </div>
             </div>
           </div>
@@ -163,11 +166,11 @@ function TireForm({ open, onClose, record, vehicles }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>{t('back_tire_date')} (MM/YY)</Label>
-                <Input value={form.back_tire_date} onChange={e => set('back_tire_date', e.target.value)} placeholder="02/25" />
+                <Input value={form.back_tire_date} onChange={e => handleTireDate('back_tire_date', e.target.value)} placeholder="02/26" maxLength={5} />
               </div>
               <div>
-                <Label>{t('back_tire_expiry')}</Label>
-                <Input type="date" value={form.back_tire_expiry} onChange={e => set('back_tire_expiry', e.target.value)} />
+                <Label>{t('back_tire_expiry')} (MM/YY)</Label>
+                <Input value={form.back_tire_expiry} onChange={e => handleTireDate('back_tire_expiry', e.target.value)} placeholder="02/28" maxLength={5} />
               </div>
             </div>
           </div>
@@ -250,9 +253,9 @@ export default function Tires() {
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {tire.front_tire_date && <Badge variant="secondary" className="text-xs">{t('front_tire_date')}: {tire.front_tire_date}</Badge>}
-                    {tire.front_tire_expiry && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">{t('front_tire_expiry')}: {formatDate(tire.front_tire_expiry, locale)}</Badge>}
+                    {tire.front_tire_expiry && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">{t('front_tire_expiry')}: {tire.front_tire_expiry}</Badge>}
                     {tire.back_tire_date && <Badge variant="secondary" className="text-xs">{t('back_tire_date')}: {tire.back_tire_date}</Badge>}
-                    {tire.back_tire_expiry && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">{t('back_tire_expiry')}: {formatDate(tire.back_tire_expiry, locale)}</Badge>}
+                    {tire.back_tire_expiry && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">{t('back_tire_expiry')}: {tire.back_tire_expiry}</Badge>}
                   </div>
                   {tire.cost && <p className="text-sm font-bold mt-2">{formatCurrency(tire.cost, locale)}</p>}
                 </div>

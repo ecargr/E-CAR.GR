@@ -56,12 +56,32 @@ function InsuranceForm({ open, onClose, record, vehicles }) {
   const autoCreateReminder = async () => {
     if (isEdit || !form.expiration_date) return;
     const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
-    await base44.entities.Reminder.create({
-      vehicle_id: form.vehicle_id,
-      type: 'insurance',
-      title: `${t('insurance')}: ${form.company} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
-      due_date: form.reminder_date || form.expiration_date,
-    });
+    const title = `${t('insurance')}: ${form.company} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`;
+    // Create multiple reminders before expiry
+    const offsets = [
+      { label: '3 months', months: 3 },
+      { label: '1 month', months: 1 },
+      { label: '10 days', days: 10 },
+      { label: '1 day', days: 1 },
+    ];
+    for (const offset of offsets) {
+      const expiry = new Date(form.expiration_date);
+      const reminderDate = new Date(expiry);
+      if (offset.months) {
+        reminderDate.setMonth(reminderDate.getMonth() - offset.months);
+      } else {
+        reminderDate.setDate(reminderDate.getDate() - offset.days);
+      }
+      const reminderStr = reminderDate.toISOString().split('T')[0];
+      if (reminderStr > new Date().toISOString().split('T')[0]) {
+        await base44.entities.Reminder.create({
+          vehicle_id: form.vehicle_id,
+          type: 'insurance',
+          title: `${title} — ${offset.label} before expiry`,
+          due_date: reminderStr,
+        });
+      }
+    }
   };
 
   const mutation = useMutation({
