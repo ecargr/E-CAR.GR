@@ -152,7 +152,7 @@ export default function Vehicles() {
                     <p className="text-sm text-muted-foreground">{v.name || (v.registration_date ? formatDate(v.registration_date, locale) : '')}</p>
                     <div className="flex items-center gap-3 mt-3 flex-wrap">
                       {v.registration_number && (
-                        <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-mono font-bold text-sm tracking-wider">
+                        <span className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-mono font-bold text-base tracking-[0.15em]">
                           {v.registration_number}
                         </span>
                       )}
