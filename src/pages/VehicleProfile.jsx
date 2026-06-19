@@ -72,7 +72,7 @@ export default function VehicleProfile() {
     };
 
     addSection(t('service_history'), services.map(s => `${formatDate(s.date, locale)} — ${t(s.service_type)}${s.service_center ? ' @ ' + s.service_center : ''}${s.cost ? ' | ' + formatCurrency(s.cost, locale) : ''}${s.mileage ? ' | ' + s.mileage.toLocaleString() + ' km' : ''}`));
-    addSection(t('tires'), tires.map(t => `${formatDate(t.installation_date, locale)} — ${t.brand || ''} ${t.model || ''} ${t.size || ''} · ${t(t.action_type)}${t.cost ? ' | ' + formatCurrency(t.cost, locale) : ''}`));
+    addSection(t('tires'), tires.map(tr => `${formatDate(tr.installation_date, locale)} — ${tr.brand || ''} ${tr.model || ''} ${tr.size || ''} · ${t(tr.action_type)}${tr.cost ? ' | ' + formatCurrency(tr.cost, locale) : ''}`));
     addSection(t('kteo'), kteos.map(k => `${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}${k.cost ? ' | ' + formatCurrency(k.cost, locale) : ''}`));
     addSection(t('insurance'), insurances.map(i => `${i.company} — ${t(i.coverage_type)} | ${formatDate(i.start_date, locale)} → ${formatDate(i.expiration_date, locale)}${i.cost ? ' | ' + formatCurrency(i.cost, locale) : ''}`));
 
