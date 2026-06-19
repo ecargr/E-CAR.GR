@@ -253,7 +253,15 @@ export default function Tires() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                         <h3 className="font-semibold text-sm">{tire.brand || tire.size || t('tires')} {tire.model}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'} · {t(tire.action_type)}</p>
+                        {vehicle && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-sm font-medium">{vehicle.make} {vehicle.model}</span>
+                            {vehicle.registration_number && (
+                              <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
+                            )}
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-0.5">{t(tire.action_type)}</p>
                       </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>

@@ -186,7 +186,15 @@ export default function Insurance() {
                   </DropdownMenu>
                 </div>
                 <h3 className="font-semibold">{ins.company}</h3>
-                <p className="text-xs text-muted-foreground">{vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'} · {t(ins.coverage_type)}</p>
+                {vehicle && (
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="text-sm font-medium">{vehicle.make} {vehicle.model}</span>
+                    {vehicle.registration_number && (
+                      <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">{t(ins.coverage_type)}</p>
                 <div className="flex items-center gap-2 mt-3 text-xs">
                   <Calendar className="w-3 h-3 text-muted-foreground" />
                   <span>{formatDate(ins.start_date, locale)} → {formatDate(ins.expiration_date, locale)}</span>

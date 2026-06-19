@@ -174,7 +174,15 @@ export default function Kteo() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-semibold text-sm">{t('kteo')} — {vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'}</h3>
+                      <h3 className="font-semibold text-sm">{t('kteo')}</h3>
+                      {vehicle && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm font-medium">{vehicle.make} {vehicle.model}</span>
+                          {vehicle.registration_number && (
+                            <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
+                          )}
+                        </div>
+                      )}
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {formatDate(kteo.inspection_date, locale)} → {formatDate(kteo.expiration_date, locale)}
                       </p>

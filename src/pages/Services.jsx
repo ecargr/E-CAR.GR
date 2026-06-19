@@ -122,9 +122,15 @@ export default function Services() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h3 className="font-semibold text-sm">{t(svc.service_type)}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}${vehicle.registration_number ? ` · ${vehicle.registration_number}` : ''}`.trim() || vehicle.name || '—' : '—'} · {formatDate(svc.date, locale)}
-                        </p>
+                        {vehicle && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-sm font-medium">{vehicle.make} {vehicle.model}</span>
+                            {vehicle.registration_number && (
+                              <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
+                            )}
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-0.5">{formatDate(svc.date, locale)}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         {svc.cost && <span className="text-sm font-bold">{formatCurrency(svc.cost, locale)}</span>}
