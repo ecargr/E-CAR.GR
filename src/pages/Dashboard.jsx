@@ -9,7 +9,7 @@ import LanguageSwitcher from '@/components/dashboard/LanguageSwitcher';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 import {
   Car, Receipt, Wrench, Bell, Shield, ClipboardCheck,
-  ArrowRight, Plus, AlertTriangle, FileX, FileWarning
+  ArrowRight, Plus, AlertTriangle, FileWarning
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,17 +50,6 @@ export default function Dashboard() {
     }))
   ].sort((a, b) => a.days - b.days);
 
-  // Missing document alerts
-  const expensesWithoutDocs = expenses.filter(e => {
-    const urls = e.receipt_urls || (e.receipt_url ? [e.receipt_url] : []);
-    return urls.length === 0;
-  });
-
-  const vehiclesWithoutPurchaseDocs = vehicles.filter(v => {
-    const docs = v.purchase_documents || [];
-    return docs.length === 0;
-  });
-
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
 
@@ -86,34 +75,6 @@ export default function Dashboard() {
         </div>
         <LanguageSwitcher />
       </div>
-
-      {/* Alerts */}
-      {(expensesWithoutDocs.length > 0 || vehiclesWithoutPurchaseDocs.length > 0) && (
-        <div className="space-y-2 mb-6">
-          {expensesWithoutDocs.length > 0 && (
-            <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-3">
-              <FileWarning className="w-5 h-5 text-amber-600 flex-shrink-0" />
-              <p className="text-sm text-amber-800 dark:text-amber-200 flex-1">
-                <span className="font-medium">{expensesWithoutDocs.length}</span> {t('expenses_without_docs')}
-              </p>
-              <Link to="/expenses">
-                <Button variant="outline" size="sm" className="text-xs gap-1">{t('view_all')} <ArrowRight className="w-3 h-3" /></Button>
-              </Link>
-            </div>
-          )}
-          {vehiclesWithoutPurchaseDocs.length > 0 && (
-            <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
-              <FileX className="w-5 h-5 text-blue-600 flex-shrink-0" />
-              <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
-                <span className="font-medium">{vehiclesWithoutPurchaseDocs.length}</span> {t('vehicles_without_purchase_docs')}
-              </p>
-              <Link to="/vehicles">
-                <Button variant="outline" size="sm" className="text-xs gap-1">{t('view_all')} <ArrowRight className="w-3 h-3" /></Button>
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-8">

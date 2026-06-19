@@ -148,7 +148,7 @@ export default function Vehicles() {
                     </DropdownMenu>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-heading font-semibold text-lg">{v.make} {v.model} {v.registration_number ? <span className="font-mono text-sm font-normal text-muted-foreground">{v.registration_number}</span> : ''}</h3>
+                    <h3 className="font-heading font-semibold text-lg">{v.make} {v.model}</h3>
                     <p className="text-sm text-muted-foreground">{v.name || (v.registration_date ? formatDate(v.registration_date, locale) : '')}</p>
                     <div className="flex items-center gap-3 mt-3 flex-wrap">
                       {v.registration_number && (
@@ -202,7 +202,7 @@ export default function Vehicles() {
           <Dialog open={!!detailVehicle} onOpenChange={() => setDetailVehicle(null)}>
             <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{detailVehicle.make} {detailVehicle.model}{detailVehicle.registration_number ? ` · ${detailVehicle.registration_number}` : ''} — {t('vehicle_details')}</DialogTitle>
+                <DialogTitle>{detailVehicle.make} {detailVehicle.model} — {t('vehicle_details')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 {(detailVehicle.photos || []).length > 0 && (
