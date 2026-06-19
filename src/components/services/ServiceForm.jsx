@@ -10,6 +10,7 @@ import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
+import MileageCheckDialog from '@/components/shared/MileageCheckDialog';
 
 const serviceTypes = ['oil_change', 'filters', 'brake_service', 'battery_replacement', 'timing_belt', 'ac_service', 'major_service', 'other'];
 
@@ -35,6 +36,7 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
     next_service_date: record?.next_service_date || '',
     next_service_km: record?.next_service_km || '',
   });
+  const [mileageConfirm, setMileageConfirm] = useState(null);
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -84,6 +86,12 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
       await autoCreateReminder(data);
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+      const newMileage = Number(form.mileage);
+      if (vehicle && newMileage > 0 && (!vehicle.current_mileage || newMileage > vehicle.current_mileage)) {
+        setMileageConfirm({ vehicle, newMileage });
+        return;
+      }
       onClose();
     }
   });
@@ -173,6 +181,13 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
             <Button type="submit" disabled={mutation.isPending}>{t('save')}</Button>
           </div>
         </form>
+        <MileageCheckDialog
+          open={!!mileageConfirm}
+          onClose={() => setMileageConfirm(null)}
+          vehicle={mileageConfirm?.vehicle}
+          newMileage={mileageConfirm?.newMileage}
+          onComplete={() => onClose()}
+        />
       </DialogContent>
     </Dialog>
   );

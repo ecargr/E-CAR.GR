@@ -107,6 +107,13 @@ const translations = {
     back_tire_date: 'Back Tires Date',
     front_tire_expiry: 'Front Tires Expiry',
     back_tire_expiry: 'Back Tires Expiry',
+    update_mileage_title: 'Update Vehicle Mileage',
+    mileage_higher_than_current: 'The mileage you entered',
+    is_higher_than: 'is higher than',
+    update_vehicle_mileage_question: 'Update vehicle mileage?',
+    update_vehicle_mileage_to: 'Update vehicle mileage to',
+    yes: 'Yes',
+    no: 'No',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -222,6 +229,13 @@ const translations = {
     back_tire_date: 'Ημ/νία Πίσω Ελαστικών',
     front_tire_expiry: 'Λήξη Μπροστά Ελαστικών',
     back_tire_expiry: 'Λήξη Πίσω Ελαστικών',
+    update_mileage_title: 'Ενημέρωση Χιλιομέτρων',
+    mileage_higher_than_current: 'Τα χιλιόμετρα που καταχωρήσατε',
+    is_higher_than: 'είναι περισσότερα από',
+    update_vehicle_mileage_question: 'Ενημέρωση χιλιομέτρων οχήματος;',
+    update_vehicle_mileage_to: 'Ενημέρωση χιλιομέτρων σε',
+    yes: 'Ναι',
+    no: 'Όχι',
   }
 };
 

@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import MileageCheckDialog from '@/components/shared/MileageCheckDialog';
 
 const seasonTypes = ['summer', 'winter', 'all_season'];
 const actionTypes = ['installation', 'rotation', 'repair', 'replacement'];
@@ -48,6 +49,7 @@ function TireForm({ open, onClose, record, vehicles }) {
     back_tire_expiry: record?.back_tire_expiry || '',
   });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  const [mileageConfirm, setMileageConfirm] = useState(null);
 
   const handleTireDate = (field, value) => {
     const digits = value.replace(/\D/g, '').slice(0, 4);
@@ -110,6 +112,12 @@ function TireForm({ open, onClose, record, vehicles }) {
       await autoCreateReminder();
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+      const newMileage = Number(form.mileage_at_installation);
+      if (vehicle && newMileage > 0 && (!vehicle.current_mileage || newMileage > vehicle.current_mileage)) {
+        setMileageConfirm({ vehicle, newMileage });
+        return;
+      }
       onClose();
     }
   });
@@ -188,6 +196,13 @@ function TireForm({ open, onClose, record, vehicles }) {
             <Button type="submit" disabled={mutation.isPending}>{t('save')}</Button>
           </div>
         </form>
+        <MileageCheckDialog
+          open={!!mileageConfirm}
+          onClose={() => setMileageConfirm(null)}
+          vehicle={mileageConfirm?.vehicle}
+          newMileage={mileageConfirm?.newMileage}
+          onComplete={() => onClose()}
+        />
       </DialogContent>
     </Dialog>
   );
