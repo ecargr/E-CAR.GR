@@ -7,10 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
 import MileageCheckDialog from '@/components/shared/MileageCheckDialog';
+import AutocompleteInput from '@/components/shared/AutocompleteInput';
 
 const serviceTypes = ['oil_change', 'filters', 'brake_service', 'battery_replacement', 'timing_belt', 'ac_service', 'major_service', 'other'];
 
@@ -37,6 +38,8 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
     next_service_km: record?.next_service_km || '',
   });
   const [mileageConfirm, setMileageConfirm] = useState(null);
+  const { data: existingServices = [] } = useQuery({ queryKey: ['services'], queryFn: () => base44.entities.ServiceRecord.list(), enabled: open });
+  const serviceCenters = [...new Set(existingServices.map(s => s.service_center).filter(Boolean))].sort();
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -134,7 +137,7 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
           </div>
           <div>
             <Label>{t('service_center')}</Label>
-            <Input value={form.service_center} onChange={e => set('service_center', e.target.value)} />
+            <AutocompleteInput value={form.service_center} onChange={v => set('service_center', v)} options={serviceCenters} placeholder={t('supplier_placeholder')} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

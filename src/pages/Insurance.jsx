@@ -7,6 +7,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
+import AutocompleteInput from '@/components/shared/AutocompleteInput';
 import { Shield, Pencil, Trash2, MoreVertical, Calendar, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,8 @@ function InsuranceForm({ open, onClose, record, vehicles }) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const isEdit = !!record;
+  const { data: allInsurances = [] } = useQuery({ queryKey: ['insurances'], queryFn: () => base44.entities.InsurancePolicy.list(), enabled: open });
+  const insuranceCompanies = [...new Set(allInsurances.map(i => i.company).filter(Boolean))].sort();
   const [form, setForm] = useState({
     vehicle_id: record?.vehicle_id || '',
     company: record?.company || '',
@@ -103,7 +106,7 @@ function InsuranceForm({ open, onClose, record, vehicles }) {
         <DialogHeader><DialogTitle>{isEdit ? t('edit') : t('add')} {t('insurance')}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div><Label>{t('vehicles')}</Label><VehicleSelector vehicles={vehicles} value={form.vehicle_id} onChange={v => set('vehicle_id', v)} showAll={false} /></div>
-          <div><Label>{t('insurance_company')}</Label><Input value={form.company} onChange={e => set('company', e.target.value)} required /></div>
+          <div><Label>{t('insurance_company')}</Label><AutocompleteInput value={form.company} onChange={v => set('company', v)} options={insuranceCompanies} placeholder={t('supplier_placeholder')} required /></div>
           <div><Label>{t('policy_number')}</Label><Input value={form.policy_number} onChange={e => set('policy_number', e.target.value)} /></div>
           <div><Label>{t('coverage_type')}</Label>
             <Select value={form.coverage_type} onValueChange={v => set('coverage_type', v)}>

@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import MileageCheckDialog from '@/components/shared/MileageCheckDialog';
+import AutocompleteInput from '@/components/shared/AutocompleteInput';
 
 const seasonTypes = ['summer', 'winter', 'all_season'];
 const actionTypes = ['installation', 'rotation', 'repair', 'replacement'];
@@ -48,6 +49,8 @@ function TireForm({ open, onClose, record, vehicles }) {
     front_tire_expiry: record?.front_tire_expiry || '',
     back_tire_expiry: record?.back_tire_expiry || '',
   });
+  const { data: allTires = [] } = useQuery({ queryKey: ['tires'], queryFn: () => base44.entities.TireRecord.list(), enabled: open });
+  const tireBrands = [...new Set(allTires.map(t => t.brand).filter(Boolean))].sort();
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
   const [mileageConfirm, setMileageConfirm] = useState(null);
 
@@ -133,7 +136,7 @@ function TireForm({ open, onClose, record, vehicles }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div><Label>{t('vehicles')}</Label><VehicleSelector vehicles={vehicles} value={form.vehicle_id} onChange={v => set('vehicle_id', v)} showAll={false} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>{t('tire_brand')} ({t('optional')})</Label><Input value={form.brand} onChange={e => set('brand', e.target.value)} /></div>
+            <div><Label>{t('tire_brand')} ({t('optional')})</Label><AutocompleteInput value={form.brand} onChange={v => set('brand', v)} options={tireBrands} placeholder={t('supplier_placeholder')} /></div>
             <div><Label>{t('tire_model')} ({t('optional')})</Label><Input value={form.model} onChange={e => set('model', e.target.value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
