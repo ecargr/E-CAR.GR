@@ -27,6 +27,7 @@ import Documents from '@/pages/Documents';
 import Notes from '@/pages/Notes';
 import Reminders from '@/pages/Reminders';
 import Reports from '@/pages/Reports';
+import VehicleProfile from '@/pages/VehicleProfile';
 import Settings from '@/pages/Settings';
 
 const AuthenticatedApp = () => {
@@ -59,6 +60,7 @@ const AuthenticatedApp = () => {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/vehicles" element={<Vehicles />} />
+          <Route path="/vehicles/:id" element={<VehicleProfile />} />
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/services" element={<Services />} />
           <Route path="/tires" element={<Tires />} />

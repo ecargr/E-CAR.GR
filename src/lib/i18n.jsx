@@ -114,6 +114,8 @@ const translations = {
     update_vehicle_mileage_to: 'Update vehicle mileage to',
     yes: 'Yes',
     no: 'No',
+    search_vehicles: 'Search by plate, make or model...',
+    download_pdf: 'Download PDF',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -236,6 +238,8 @@ const translations = {
     update_vehicle_mileage_to: 'Ενημέρωση χιλιομέτρων σε',
     yes: 'Ναι',
     no: 'Όχι',
+    search_vehicles: 'Αναζήτηση ανά πινακίδα, μάρκα ή μοντέλο...',
+    download_pdf: 'Λήψη PDF',
   }
 };
 

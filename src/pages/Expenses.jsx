@@ -8,7 +8,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import ExpenseForm from '@/components/expenses/ExpenseForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Receipt, Pencil, Trash2, MoreVertical, Search, X, FileText, FileWarning, Download, Eye, Store } from 'lucide-react';
+import { Receipt, Pencil, Trash2, MoreVertical, Search, X, FileText, Download, Eye, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -94,10 +94,6 @@ export default function Expenses() {
   }, [expenses, vehicleFilter, searchQuery, dateFrom, dateTo, categoryFilter, supplierFilter, t]);
 
   const totalFiltered = filtered.reduce((s, e) => s + (e.amount || 0), 0);
-  const withoutDocs = filtered.filter(e => {
-    const urls = e.receipt_urls || (e.receipt_url ? [e.receipt_url] : []);
-    return urls.length === 0;
-  }).length;
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="h-full">
@@ -154,15 +150,6 @@ export default function Expenses() {
           </div>
         </div>
 
-        {withoutDocs > 0 && (
-          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-2.5 mb-4">
-            <FileWarning className="w-4 h-4 text-amber-600 flex-shrink-0" />
-            <p className="text-xs text-amber-800 dark:text-amber-200">
-              <span className="font-medium">{withoutDocs}</span> {t('missing_receipts_warning')}
-            </p>
-          </div>
-        )}
-
         <div className="flex items-center gap-3 mb-4">
           <span className="text-sm text-muted-foreground">
             {t('total')}: <span className="font-semibold text-foreground">{formatCurrency(totalFiltered, locale)}</span>
@@ -213,7 +200,7 @@ export default function Expenses() {
                                 {urls.length}
                               </button>
                             ) : (
-                              <span className="text-muted-foreground" title={t('missing_receipt')}><FileWarning className="w-3.5 h-3.5 text-amber-500" /></span>
+                              <span className="text-muted-foreground">—</span>
                             )}
                           </td>
                           <td className="px-4 py-2">
@@ -249,8 +236,8 @@ export default function Expenses() {
                 const hasDocs = urls.length > 0;
                 return (
                   <div key={exp.id} className="bg-card rounded-xl border border-border p-4 flex items-start gap-3 active:bg-muted/50 transition-colors">
-                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", hasDocs ? "bg-primary/10" : "bg-amber-500/10")}>
-                      {hasDocs ? <Receipt className="w-5 h-5 text-primary" /> : <FileWarning className="w-5 h-5 text-amber-600" />}
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary/10">
+                      <Receipt className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">

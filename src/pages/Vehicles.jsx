@@ -7,13 +7,13 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleForm from '@/components/vehicles/VehicleForm';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Car, Bike, MoreVertical, Pencil, Trash2, Gauge, User, Building, Banknote, FileText } from 'lucide-react';
+import { Car, Bike, MoreVertical, Pencil, Trash2, Gauge, User, Building, Banknote, FileText, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -24,10 +24,10 @@ export default function Vehicles() {
   const [showForm, setShowForm] = useState(searchParams.get('action') === 'add');
   const [editVehicle, setEditVehicle] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
-  const [detailVehicle, setDetailVehicle] = useState(null);
   const [transmissionFilter, setTransmissionFilter] = useState('all');
   const [makeFilter, setMakeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('none');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: vehicles = [], isLoading, refetch } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
 
@@ -59,6 +59,20 @@ export default function Vehicles() {
         <PageHeader title={t('vehicles')} action={() => setShowForm(true)} actionLabel={t('add_vehicle')} />
 
         <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="relative flex-1 max-w-[220px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder={t('search_vehicles')}
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9 pr-8"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
           <Select value={makeFilter} onValueChange={setMakeFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder={t('make')} />
@@ -101,6 +115,12 @@ export default function Vehicles() {
               let filtered = vehicles.filter(v => {
                 if (transmissionFilter !== 'all' && v.transmission !== transmissionFilter) return false;
                 if (makeFilter !== 'all' && v.make !== makeFilter) return false;
+                if (searchQuery.trim()) {
+                  const q = searchQuery.toLowerCase();
+                  const plate = (v.registration_number || '').toLowerCase();
+                  const name = `${v.make || ''} ${v.model || ''} ${v.name || ''}`.toLowerCase();
+                  if (!plate.includes(q) && !name.includes(q)) return false;
+                }
                 return true;
               });
 
@@ -135,8 +155,10 @@ export default function Vehicles() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setDetailVehicle(v)}>
-                          <Car className="w-3.5 h-3.5 mr-2" />{t('vehicle_details')}
+                        <DropdownMenuItem asChild>
+                          <Link to={`/vehicles/${v.id}`}>
+                            <Car className="w-3.5 h-3.5 mr-2" />{t('vehicle_details')}
+                          </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => { setEditVehicle(v); setShowForm(true); }}>
                           <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
@@ -196,70 +218,6 @@ export default function Vehicles() {
               });
             })()}
           </div>
-        )}
-
-        {detailVehicle && (
-          <Dialog open={!!detailVehicle} onOpenChange={() => setDetailVehicle(null)}>
-            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{detailVehicle.make} {detailVehicle.model} — {t('vehicle_details')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                {(detailVehicle.photos || []).length > 0 && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {detailVehicle.photos.map((url, idx) => (
-                      <div key={idx} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-                        <img src={url} alt={`${detailVehicle.name} photo ${idx + 1}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-muted-foreground">{t('make')}:</span> <span className="font-medium">{detailVehicle.make}</span></div>
-                  <div><span className="text-muted-foreground">{t('model')}:</span> <span className="font-medium">{detailVehicle.model}</span></div>
-                  {detailVehicle.registration_date && <div><span className="text-muted-foreground">{t('registration_date_label')}:</span> <span className="font-medium">{formatDate(detailVehicle.registration_date, locale)}</span></div>}
-                  {detailVehicle.registration_number && <div><span className="text-muted-foreground">{t('registration_number')}:</span> <span className="font-medium">{detailVehicle.registration_number}</span></div>}
-                  {detailVehicle.vin && <div><span className="text-muted-foreground">{t('vin_number')}:</span> <span className="font-medium text-xs">{detailVehicle.vin}</span></div>}
-                  {detailVehicle.fuel_type && <div><span className="text-muted-foreground">{t('fuel_type')}:</span> <span className="font-medium">{t(detailVehicle.fuel_type)}</span></div>}
-                  {detailVehicle.transmission && <div><span className="text-muted-foreground">{t('transmission')}:</span> <span className="font-medium">{t(detailVehicle.transmission)}</span></div>}
-                  {detailVehicle.current_mileage != null && <div><span className="text-muted-foreground">{t('current_mileage')}:</span> <span className="font-medium">{detailVehicle.current_mileage.toLocaleString()} km</span></div>}
-                </div>
-                <div className="border-t border-border pt-4">
-                  <h4 className="font-heading font-semibold text-sm mb-3 flex items-center gap-2">
-                    <Building className="w-4 h-4 text-primary" />
-                    {t('purchase_information')}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    {detailVehicle.purchase_date && <div><span className="text-muted-foreground">{t('purchase_date')}:</span> <span className="font-medium">{formatDate(detailVehicle.purchase_date, locale)}</span></div>}
-                    {detailVehicle.purchase_price != null && <div><span className="text-muted-foreground">{t('purchase_price')}:</span> <span className="font-medium">{formatCurrency(detailVehicle.purchase_price, locale)}</span></div>}
-                    {detailVehicle.seller_name && <div><span className="text-muted-foreground">{t('seller_name')}:</span> <span className="font-medium">{detailVehicle.seller_name}</span></div>}
-                    {detailVehicle.seller_contact && <div><span className="text-muted-foreground">{t('seller_contact')}:</span> <span className="font-medium">{detailVehicle.seller_contact}</span></div>}
-                    {detailVehicle.purchase_method && <div><span className="text-muted-foreground">{t('purchase_method')}:</span> <span className="font-medium">{t(detailVehicle.purchase_method)}</span></div>}
-                    {detailVehicle.payment_method && <div><span className="text-muted-foreground">{t('payment_method')}:</span> <span className="font-medium">{t(detailVehicle.payment_method)}</span></div>}
-                  </div>
-                  {detailVehicle.purchase_notes && (
-                    <p className="text-sm text-muted-foreground mt-2">{detailVehicle.purchase_notes}</p>
-                  )}
-                </div>
-                {(detailVehicle.purchase_documents || []).length > 0 && (
-                  <div className="border-t border-border pt-4">
-                    <h4 className="font-heading font-semibold text-sm mb-2 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-primary" />
-                      {t('purchase_documents')}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {detailVehicle.purchase_documents.map((url, idx) => (
-                        <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-xs font-medium transition-colors">
-                          <FileText className="w-3.5 h-3.5" />
-                          {t('document')} {idx + 1}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
         )}
 
         {showForm && (
