@@ -194,7 +194,7 @@ export default function Insurance() {
             const isExpired = days != null && days < 0;
             return (
               <div key={ins.id} className={cn("bg-card rounded-xl border p-5 hover:shadow-md transition-shadow", isExpired ? "border-destructive/30" : "border-border")}>
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between mb-2">
                   <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", getUrgencyBg(days))}>
                     <Shield className={cn("w-5 h-5", getUrgencyColor(days))} />
                   </div>
@@ -208,7 +208,7 @@ export default function Insurance() {
                 </div>
                 {vehicle && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold">{vehicle.make} {vehicle.model}</h3>
+                    <h3 className="font-heading font-semibold">{vehicle.make} {vehicle.model}</h3>
                     {vehicle.registration_number && (
                       <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
                     )}
@@ -218,15 +218,18 @@ export default function Insurance() {
                   <span className="text-sm font-medium">{ins.company}</span>
                   <span className="text-xs text-muted-foreground">· {t(ins.coverage_type)}</span>
                 </div>
-                <div className="flex items-center gap-2 mt-2 text-xs">
-                  <Calendar className="w-3 h-3 text-muted-foreground" />
+                <div className="flex items-center gap-2 mt-3 text-sm">
+                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="font-medium">{formatDate(ins.expiration_date, locale)}</span>
+                  <Badge className={cn("font-bold text-xs px-2 py-0.5", isExpired ? "bg-destructive/15 text-destructive" : "bg-primary/10 text-primary")}>
+                    {isExpired ? t('expired') : `${days}d`}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                   <span>{formatDate(ins.start_date, locale)} → {formatDate(ins.expiration_date, locale)}</span>
                 </div>
-                <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                   {ins.cost && <span className="text-sm font-bold">{formatCurrency(ins.cost, locale)}</span>}
-                  <Badge variant="secondary" className={cn("text-xs", getUrgencyColor(days))}>
-                    {isExpired ? t('expired') : `${days} ${t('days_remaining')}`}
-                  </Badge>
                 </div>
               </div>
             );

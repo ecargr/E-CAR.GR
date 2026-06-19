@@ -131,61 +131,60 @@ export default function Services() {
               const vehicle = vehicleMap[svc.vehicle_id];
               return (
                 <div key={svc.id} className="bg-card rounded-xl border border-border p-4 hover:shadow-md transition-shadow flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <Wrench className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        {vehicle && (
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-sm">{vehicle.make} {vehicle.model}</h3>
-                            {vehicle.registration_number && (
-                              <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
-                            )}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-sm font-medium">{t(svc.service_type)}</span>
-                          <span className="text-xs text-muted-foreground">· {formatDate(svc.date, locale)}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {svc.cost && <span className="text-sm font-bold">{formatCurrency(svc.cost, locale)}</span>}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${t(svc.service_type)}`}><MoreVertical className="w-3.5 h-3.5" /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setEditItem(svc); setShowForm(true); }}>
-                              <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDeleteId(svc.id)} className="text-destructive">
-                              <Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {svc.mileage && (
-                        <Badge variant="secondary" className="text-xs gap-1"><Gauge className="w-2.5 h-2.5" />{svc.mileage.toLocaleString()} km</Badge>
-                      )}
-                      {svc.next_service_date && (
-                        <Badge variant="secondary" className="text-xs gap-1 bg-primary/10 text-primary">
-                          <Calendar className="w-2.5 h-2.5" />
-                          {t('next_service_date')}: {formatDate(svc.next_service_date, locale)}
-                        </Badge>
-                      )}
-                      {svc.next_service_km && (
-                        <Badge variant="secondary" className="text-xs gap-1">
-                          <Gauge className="w-2.5 h-2.5" />{t('next_service_km')}: {svc.next_service_km.toLocaleString()} km
-                        </Badge>
-                      )}
-                    </div>
-                    {svc.service_center && <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1"><MapPin className="w-3 h-3" />{svc.service_center}</p>}
-                    {svc.notes && <p className="text-xs text-muted-foreground mt-1">{svc.notes}</p>}
-                  </div>
+                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                   <Wrench className="w-5 h-5 text-emerald-600" />
+                 </div>
+                 <div className="flex-1 min-w-0">
+                   <div className="flex items-start justify-between gap-3">
+                     <div className="flex-1 min-w-0">
+                       {vehicle && (
+                         <div className="flex items-center gap-2">
+                           <h3 className="font-heading font-semibold text-base">{vehicle.make} {vehicle.model}</h3>
+                           {vehicle.registration_number && (
+                             <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
+                           )}
+                         </div>
+                       )}
+                       <div className="flex items-center gap-3 mt-1 flex-wrap">
+                         <div className="flex items-center gap-2">
+                           {svc.mileage && (
+                             <span className="flex items-center gap-1 text-lg font-bold"><Gauge className="w-4 h-4 text-muted-foreground" />{svc.mileage.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">km</span></span>
+                           )}
+                         </div>
+                         <span className="inline-flex items-center gap-1 text-sm text-muted-foreground"><Calendar className="w-3.5 h-3.5" />{formatDate(svc.date, locale)}</span>
+                         <span className="text-sm font-medium">{t(svc.service_type)}</span>
+                       </div>
+                       {svc.service_center && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="w-3 h-3" />{svc.service_center}</p>}
+                     </div>
+                     <div className="flex flex-col items-end gap-2 shrink-0">
+                       <div className="flex items-center gap-2">
+                         {svc.cost && <span className="text-base font-bold">{formatCurrency(svc.cost, locale)}</span>}
+                         <DropdownMenu>
+                           <DropdownMenuTrigger asChild>
+                             <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${t(svc.service_type)}`}><MoreVertical className="w-3.5 h-3.5" /></Button>
+                           </DropdownMenuTrigger>
+                           <DropdownMenuContent align="end">
+                             <DropdownMenuItem onClick={() => { setEditItem(svc); setShowForm(true); }}>
+                               <Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}
+                             </DropdownMenuItem>
+                             <DropdownMenuItem onClick={() => setDeleteId(svc.id)} className="text-destructive">
+                               <Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}
+                             </DropdownMenuItem>
+                           </DropdownMenuContent>
+                         </DropdownMenu>
+                       </div>
+                       <div className="flex flex-col items-end gap-1">
+                         {svc.next_service_date && (
+                           <span className="text-[10px] text-primary font-medium whitespace-nowrap"><Calendar className="w-2.5 h-2.5 inline mr-0.5" />{t('next_service_date')}: {formatDate(svc.next_service_date, locale)}</span>
+                         )}
+                         {svc.next_service_km && (
+                           <span className="text-[10px] text-muted-foreground whitespace-nowrap"><Gauge className="w-2.5 h-2.5 inline mr-0.5" />{t('next_service_km')}: {svc.next_service_km.toLocaleString()} km</span>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                   {svc.notes && <p className="text-xs text-muted-foreground mt-2">{svc.notes}</p>}
+                 </div>
                 </div>
               );
             })}

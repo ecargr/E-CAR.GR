@@ -7,7 +7,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
-import { CircleDot, Pencil, Trash2, MoreVertical, Gauge, Search, X } from 'lucide-react';
+import { CircleDot, Pencil, Trash2, MoreVertical, Gauge, Search, X, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -271,43 +271,48 @@ export default function Tires() {
                   <CircleDot className="w-5 h-5 text-slate-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                        {vehicle && (
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-sm">{vehicle.make} {vehicle.model}</h3>
-                            {vehicle.registration_number && (
-                              <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
-                            )}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-sm font-medium">{tire.brand || tire.size || t('tires')} {tire.model}</span>
-                          <span className="text-xs text-muted-foreground">· {t(tire.action_type)}</span>
-                          {tire.installation_date && <span className="text-xs text-muted-foreground">· {formatDate(tire.installation_date, locale)}</span>}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      {vehicle && (
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-heading font-semibold text-base">{vehicle.make} {vehicle.model}</h3>
+                          {vehicle.registration_number && (
+                            <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
+                          )}
                         </div>
+                      )}
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        {tire.mileage_at_installation && (
+                          <span className="flex items-center gap-1 text-lg font-bold"><Gauge className="w-4 h-4 text-muted-foreground" />{tire.mileage_at_installation.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">km</span></span>
+                        )}
+                        <span className="text-sm text-muted-foreground">{t(tire.action_type)}</span>
+                        {tire.installation_date && <span className="text-sm text-muted-foreground flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(tire.installation_date, locale)}</span>}
                       </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { setEditItem(tire); setShowForm(true); }}><Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDeleteId(tire.id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-sm font-medium">{tire.brand || tire.size || t('tires')} {tire.model}</span>
+                        {tire.size && <Badge variant="secondary" className="text-xs">{tire.size}</Badge>}
+                        <Badge variant="secondary" className={`text-xs ${seasonBadgeColor[tire.seasonal_type] || ''}`}>{t(tire.seasonal_type)}</Badge>
+                        {tire.cost && <span className="text-sm font-bold ml-1">{formatCurrency(tire.cost, locale)}</span>}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditItem(tire); setShowForm(true); }}><Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setDeleteId(tire.id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {tire.size && <Badge variant="secondary" className="text-xs">{tire.size}</Badge>}
-                    <Badge variant="secondary" className={`text-xs ${seasonBadgeColor[tire.seasonal_type] || ''}`}>{t(tire.seasonal_type)}</Badge>
-                    {tire.installation_date && <Badge variant="secondary" className="text-xs">{formatDate(tire.installation_date, locale)}</Badge>}
-                    {tire.mileage_at_installation && <Badge variant="secondary" className="text-xs gap-1"><Gauge className="w-2.5 h-2.5" />{tire.mileage_at_installation.toLocaleString()} km</Badge>}
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {tire.front_tire_date && <Badge variant="secondary" className="text-xs">{t('front_tire_date')}: {tire.front_tire_date}</Badge>}
-                    {tire.front_tire_expiry && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">{t('front_tire_expiry')}: {tire.front_tire_expiry}</Badge>}
-                    {tire.back_tire_date && <Badge variant="secondary" className="text-xs">{t('back_tire_date')}: {tire.back_tire_date}</Badge>}
-                    {tire.back_tire_expiry && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">{t('back_tire_expiry')}: {tire.back_tire_expiry}</Badge>}
-                  </div>
-                  {tire.cost && <p className="text-sm font-bold mt-2">{formatCurrency(tire.cost, locale)}</p>}
+                  {(tire.front_tire_expiry || tire.back_tire_expiry || tire.front_tire_date || tire.back_tire_date) && (
+                    <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-border/50">
+                      {tire.front_tire_date && <Badge variant="secondary" className="text-[10px]">Front Prod: {tire.front_tire_date}</Badge>}
+                      {tire.front_tire_expiry && <Badge variant="secondary" className="text-[10px] font-bold bg-destructive/10 text-destructive">Front Exp: {tire.front_tire_expiry}</Badge>}
+                      {tire.back_tire_date && <Badge variant="secondary" className="text-[10px]">Back Prod: {tire.back_tire_date}</Badge>}
+                      {tire.back_tire_expiry && <Badge variant="secondary" className="text-[10px] font-bold bg-destructive/10 text-destructive">Back Exp: {tire.back_tire_expiry}</Badge>}
+                    </div>
+                  )}
                 </div>
               </div>
             );

@@ -170,7 +170,7 @@ export default function Vehicles() {
                     </DropdownMenu>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-heading font-semibold text-lg">{v.make} {v.model}</h3>
+                    <h3 className="font-heading font-semibold text-lg">{v.make} {v.model}{v.version ? <span className="text-muted-foreground font-normal"> · {v.version}</span> : ''}</h3>
                     <p className="text-sm text-muted-foreground">{v.name || (v.registration_date ? formatDate(v.registration_date, locale) : '')}</p>
                     <div className="flex items-center gap-3 mt-3 flex-wrap">
                       {v.registration_number && (

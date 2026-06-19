@@ -196,39 +196,37 @@ export default function Kteo() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       {vehicle && (
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-sm">{vehicle.make} {vehicle.model}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-heading font-semibold text-base">{vehicle.make} {vehicle.model}</h3>
                           {vehicle.registration_number && (
-                            <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
+                            <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2.5 py-1 rounded tracking-wide">{vehicle.registration_number}</span>
                           )}
                         </div>
                       )}
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-sm font-medium">{t('kteo')}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(kteo.inspection_date, locale)} → {formatDate(kteo.expiration_date, locale)}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{formatDate(kteo.inspection_date, locale)} → {formatDate(kteo.expiration_date, locale)}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className={cn("text-xs gap-1", resultColors[kteo.result])}>
-                        <ResultIcon className="w-3 h-3" />{t(kteo.result)}
-                      </Badge>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setEditItem(kteo); setShowForm(true); }}><Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeleteId(kteo.id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setEditItem(kteo); setShowForm(true); }}><Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setDeleteId(kteo.id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   <div className="flex items-center gap-3 mt-2">
-                    {kteo.cost && <span className="text-sm font-bold">{formatCurrency(kteo.cost, locale)}</span>}
-                    <Badge variant="secondary" className={cn("text-xs", getUrgencyColor(days))}>
-                      {days < 0 ? t('expired') : `${days} ${t('days_remaining')}`}
+                    <Badge variant="secondary" className={cn("text-xs gap-1", resultColors[kteo.result])}>
+                      <ResultIcon className="w-3 h-3" />{t(kteo.result)}
+                    </Badge>
+                    <span className="font-bold text-sm">{t('expiration_date')}:</span>
+                    <span className="text-sm font-medium">{formatDate(kteo.expiration_date, locale)}</span>
+                    <Badge className={cn("font-bold text-xs px-2 py-0.5 ml-auto", days < 0 ? "bg-destructive/15 text-destructive" : "bg-primary/10 text-primary")}>
+                      {days < 0 ? t('expired') : days === 0 ? t('due_today') : `${days}d`}
                     </Badge>
                   </div>
+                  {kteo.cost && <p className="text-sm font-bold mt-2">{formatCurrency(kteo.cost, locale)}</p>}
                 </div>
               </div>
             );
