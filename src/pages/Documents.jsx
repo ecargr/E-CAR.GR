@@ -6,7 +6,7 @@ import { formatDate } from '@/lib/helpers';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
-import { FileText, Pencil, Trash2, MoreVertical, Upload, ExternalLink, File } from 'lucide-react';
+import { FileText, Pencil, Trash2, MoreVertical, Upload, ExternalLink, File, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -92,6 +92,7 @@ export default function Documents() {
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [vehicleFilter, setVehicleFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: docs = [], isLoading } = useQuery({ queryKey: ['documents'], queryFn: () => base44.entities.VehicleDocument.list('-created_date') });
@@ -103,12 +104,32 @@ export default function Documents() {
 
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
-  const filtered = vehicleFilter === 'all' ? docs : docs.filter(d => d.vehicle_id === vehicleFilter);
+  const filtered = (() => {
+    let result = vehicleFilter === 'all' ? docs : docs.filter(d => d.vehicle_id === vehicleFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(d => {
+        const v = vehicleMap[d.vehicle_id];
+        if (!v) return false;
+        const plate = (v.registration_number || '').toLowerCase();
+        const name = `${v.make || ''} ${v.model || ''}`.toLowerCase();
+        return plate.includes(q) || name.includes(q);
+      });
+    }
+    return result;
+  })();
 
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <PageHeader title={t('documents')} action={() => setShowForm(true)} actionLabel={`${t('add')} ${t('documents')}`} />
-      <div className="mb-6"><VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} /></div>
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="relative flex-1 max-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder={t('search_vehicles')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-8" />
+          {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search"><X className="w-4 h-4" /></button>}
+        </div>
+        <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
+      </div>
 
       {filtered.length === 0 && !isLoading ? (
         <EmptyState icon={FileText} title={t('no_data')} actionLabel={`${t('add')} ${t('documents')}`} action={() => setShowForm(true)} />

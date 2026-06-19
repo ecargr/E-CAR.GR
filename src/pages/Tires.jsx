@@ -7,7 +7,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
-import { CircleDot, Pencil, Trash2, MoreVertical, Gauge } from 'lucide-react';
+import { CircleDot, Pencil, Trash2, MoreVertical, Gauge, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -218,6 +218,7 @@ export default function Tires() {
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [vehicleFilter, setVehicleFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: tires = [], isLoading } = useQuery({ queryKey: ['tires'], queryFn: () => base44.entities.TireRecord.list('-installation_date') });
@@ -229,14 +230,34 @@ export default function Tires() {
 
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
-  const filtered = vehicleFilter === 'all' ? tires : tires.filter(t => t.vehicle_id === vehicleFilter);
+  const filtered = (() => {
+    let result = vehicleFilter === 'all' ? tires : tires.filter(t => t.vehicle_id === vehicleFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(t => {
+        const v = vehicleMap[t.vehicle_id];
+        if (!v) return false;
+        const plate = (v.registration_number || '').toLowerCase();
+        const name = `${v.make || ''} ${v.model || ''}`.toLowerCase();
+        return plate.includes(q) || name.includes(q);
+      });
+    }
+    return result;
+  })();
 
   const seasonBadgeColor = { summer: 'bg-amber-500/10 text-amber-600', winter: 'bg-blue-500/10 text-blue-600', all_season: 'bg-emerald-500/10 text-emerald-600' };
 
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <PageHeader title={t('tires')} action={() => setShowForm(true)} actionLabel={`${t('add')} ${t('tires')}`} />
-      <div className="mb-6"><VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} /></div>
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="relative flex-1 max-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder={t('search_vehicles')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-8" />
+          {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search"><X className="w-4 h-4" /></button>}
+        </div>
+        <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
+      </div>
 
       {filtered.length === 0 && !isLoading ? (
         <EmptyState icon={CircleDot} title={t('no_data')} actionLabel={`${t('add')} ${t('tires')}`} action={() => setShowForm(true)} />
@@ -252,16 +273,19 @@ export default function Tires() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                        <h3 className="font-semibold text-sm">{tire.brand || tire.size || t('tires')} {tire.model}</h3>
                         {vehicle && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm font-medium">{vehicle.make} {vehicle.model}</span>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-sm">{vehicle.make} {vehicle.model}</h3>
                             {vehicle.registration_number && (
                               <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
                             )}
                           </div>
                         )}
-                        <p className="text-xs text-muted-foreground mt-0.5">{t(tire.action_type)}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm font-medium">{tire.brand || tire.size || t('tires')} {tire.model}</span>
+                          <span className="text-xs text-muted-foreground">· {t(tire.action_type)}</span>
+                          {tire.installation_date && <span className="text-xs text-muted-foreground">· {formatDate(tire.installation_date, locale)}</span>}
+                        </div>
                       </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>

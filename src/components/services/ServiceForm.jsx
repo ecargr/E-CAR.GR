@@ -60,20 +60,13 @@ export default function ServiceForm({ open, onClose, record, vehicles }) {
   const autoCreateReminder = async (serviceRecord) => {
     if (isEdit) return;
     const vehicle = vehicles?.find(v => v.id === form.vehicle_id);
+    const reminderDate = form.next_service_date || form.reminder_date;
     await base44.entities.Reminder.create({
       vehicle_id: form.vehicle_id,
       type: 'service',
       title: `${t('service')}: ${t(form.service_type)} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
-      due_date: form.reminder_date,
+      due_date: reminderDate,
     });
-    if (form.next_service_date) {
-      await base44.entities.Reminder.create({
-        vehicle_id: form.vehicle_id,
-        type: 'service',
-        title: `${t('next_service_date')}: ${t(form.service_type)} — ${vehicle?.name || vehicle?.make + ' ' + vehicle?.model || ''}`,
-        due_date: form.next_service_date,
-      });
-    }
   };
 
   const mutation = useMutation({

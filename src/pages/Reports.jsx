@@ -6,13 +6,15 @@ import { formatCurrency } from '@/lib/helpers';
 import PageHeader from '@/components/shared/PageHeader';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#ec4899', '#6b7280'];
 
 export default function Reports() {
   const { t, locale } = useI18n();
   const [vehicleFilter, setVehicleFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: expenses = [] } = useQuery({ queryKey: ['expenses-all'], queryFn: () => base44.entities.Expense.list('-date', 500) });
@@ -20,7 +22,20 @@ export default function Reports() {
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
 
-  const filtered = vehicleFilter === 'all' ? expenses : expenses.filter(e => e.vehicle_id === vehicleFilter);
+  const filtered = (() => {
+    let result = vehicleFilter === 'all' ? expenses : expenses.filter(e => e.vehicle_id === vehicleFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(e => {
+        const v = vehicleMap[e.vehicle_id];
+        if (!v) return false;
+        const plate = (v.registration_number || '').toLowerCase();
+        const name = `${v.make || ''} ${v.model || ''}`.toLowerCase();
+        return plate.includes(q) || name.includes(q);
+      });
+    }
+    return result;
+  })();
 
   const monthlyData = useMemo(() => {
     const months = {};
@@ -60,6 +75,11 @@ export default function Reports() {
     <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <PageHeader title={t('reports')} actionIcon={BarChart3} />
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-8">
+        <div className="relative flex-1 max-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder={t('search_vehicles')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-8" />
+          {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search"><X className="w-4 h-4" /></button>}
+        </div>
         <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
         <p className="text-sm text-muted-foreground">{t('total')}: <span className="font-bold text-foreground">{formatCurrency(totalExpenses, locale)}</span></p>
       </div>

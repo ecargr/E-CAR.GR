@@ -8,7 +8,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
-import { Shield, Pencil, Trash2, MoreVertical, Calendar, Building2 } from 'lucide-react';
+import { Shield, Pencil, Trash2, MoreVertical, Calendar, Building2, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -145,6 +145,7 @@ export default function Insurance() {
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [vehicleFilter, setVehicleFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: insurances = [], isLoading } = useQuery({ queryKey: ['insurances'], queryFn: () => base44.entities.InsurancePolicy.list('-expiration_date') });
@@ -156,12 +157,32 @@ export default function Insurance() {
 
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
-  const filtered = vehicleFilter === 'all' ? insurances : insurances.filter(i => i.vehicle_id === vehicleFilter);
+  const filtered = (() => {
+    let result = vehicleFilter === 'all' ? insurances : insurances.filter(i => i.vehicle_id === vehicleFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(i => {
+        const v = vehicleMap[i.vehicle_id];
+        if (!v) return false;
+        const plate = (v.registration_number || '').toLowerCase();
+        const name = `${v.make || ''} ${v.model || ''}`.toLowerCase();
+        return plate.includes(q) || name.includes(q);
+      });
+    }
+    return result;
+  })();
 
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <PageHeader title={t('insurance')} action={() => setShowForm(true)} actionLabel={`${t('add')} ${t('insurance')}`} />
-      <div className="mb-6"><VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} /></div>
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="relative flex-1 max-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder={t('search_vehicles')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-8" />
+          {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search"><X className="w-4 h-4" /></button>}
+        </div>
+        <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
+      </div>
 
       {filtered.length === 0 && !isLoading ? (
         <EmptyState icon={Shield} title={t('no_data')} actionLabel={`${t('add')} ${t('insurance')}`} action={() => setShowForm(true)} />
@@ -185,17 +206,19 @@ export default function Insurance() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <h3 className="font-semibold">{ins.company}</h3>
                 {vehicle && (
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <span className="text-sm font-medium">{vehicle.make} {vehicle.model}</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold">{vehicle.make} {vehicle.model}</h3>
                     {vehicle.registration_number && (
                       <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
                     )}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">{t(ins.coverage_type)}</p>
-                <div className="flex items-center gap-2 mt-3 text-xs">
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm font-medium">{ins.company}</span>
+                  <span className="text-xs text-muted-foreground">· {t(ins.coverage_type)}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-2 text-xs">
                   <Calendar className="w-3 h-3 text-muted-foreground" />
                   <span>{formatDate(ins.start_date, locale)} → {formatDate(ins.expiration_date, locale)}</span>
                 </div>

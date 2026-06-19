@@ -8,7 +8,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import ServiceForm from '@/components/services/ServiceForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X, Calendar, Clock } from 'lucide-react';
+import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X, Calendar, Clock, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,7 @@ export default function Services() {
   const [dateTo, setDateTo] = useState('');
   const [serviceCenterFilter, setServiceCenterFilter] = useState('all');
   const [showUpcoming, setShowUpcoming] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: services = [], isLoading, refetch } = useQuery({ queryKey: ['services'], queryFn: () => base44.entities.ServiceRecord.list('-date', 200) });
@@ -67,6 +68,16 @@ export default function Services() {
     if (showUpcoming) {
       result = result.filter(s => s.next_service_date && s.next_service_date >= today);
     }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(s => {
+        const v = vehicleMap[s.vehicle_id];
+        if (!v) return false;
+        const plate = (v.registration_number || '').toLowerCase();
+        const name = `${v.make || ''} ${v.model || ''}`.toLowerCase();
+        return plate.includes(q) || name.includes(q);
+      });
+    }
     return result;
   })();
 
@@ -76,6 +87,11 @@ export default function Services() {
         <PageHeader title={t('service_history')} action={() => setShowForm(true)} actionLabel={t('add_service')} />
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
+          <div className="relative flex-1 max-w-[220px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder={t('search_vehicles')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-8" />
+            {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search"><X className="w-4 h-4" /></button>}
+          </div>
           <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
           <Select value={serviceCenterFilter} onValueChange={setServiceCenterFilter}>
             <SelectTrigger className="w-44 text-xs">
@@ -121,16 +137,18 @@ export default function Services() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="font-semibold text-sm">{t(svc.service_type)}</h3>
                         {vehicle && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm font-medium">{vehicle.make} {vehicle.model}</span>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-sm">{vehicle.make} {vehicle.model}</h3>
                             {vehicle.registration_number && (
                               <span className="bg-primary/10 text-primary text-xs font-mono font-bold px-2 py-0.5 rounded tracking-wide">{vehicle.registration_number}</span>
                             )}
                           </div>
                         )}
-                        <p className="text-xs text-muted-foreground mt-0.5">{formatDate(svc.date, locale)}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm font-medium">{t(svc.service_type)}</span>
+                          <span className="text-xs text-muted-foreground">· {formatDate(svc.date, locale)}</span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {svc.cost && <span className="text-sm font-bold">{formatCurrency(svc.cost, locale)}</span>}
@@ -150,9 +168,6 @@ export default function Services() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {svc.service_center && (
-                        <Badge variant="secondary" className="text-xs gap-1"><MapPin className="w-2.5 h-2.5" />{svc.service_center}</Badge>
-                      )}
                       {svc.mileage && (
                         <Badge variant="secondary" className="text-xs gap-1"><Gauge className="w-2.5 h-2.5" />{svc.mileage.toLocaleString()} km</Badge>
                       )}
@@ -168,7 +183,8 @@ export default function Services() {
                         </Badge>
                       )}
                     </div>
-                    {svc.notes && <p className="text-xs text-muted-foreground mt-2">{svc.notes}</p>}
+                    {svc.service_center && <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1"><MapPin className="w-3 h-3" />{svc.service_center}</p>}
+                    {svc.notes && <p className="text-xs text-muted-foreground mt-1">{svc.notes}</p>}
                   </div>
                 </div>
               );

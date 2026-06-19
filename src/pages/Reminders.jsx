@@ -7,7 +7,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Bell, Pencil, Trash2, MoreVertical, Check, Shield, ClipboardCheck, Wrench, CircleDot, Star } from 'lucide-react';
+import { Bell, Pencil, Trash2, MoreVertical, Check, Shield, ClipboardCheck, Wrench, CircleDot, Star, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -74,6 +74,7 @@ export default function Reminders() {
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [vehicleFilter, setVehicleFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
   const { data: reminders = [], isLoading, refetch } = useQuery({ queryKey: ['reminders'], queryFn: () => base44.entities.Reminder.list('due_date') });
@@ -112,8 +113,21 @@ export default function Reminders() {
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
 
-  const filtered = (vehicleFilter === 'all' ? reminders : reminders.filter(r => r.vehicle_id === vehicleFilter))
-    .filter(r => !r.dismissed);
+  const filtered = (() => {
+    let result = (vehicleFilter === 'all' ? reminders : reminders.filter(r => r.vehicle_id === vehicleFilter))
+      .filter(r => !r.dismissed);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(r => {
+        const v = vehicleMap[r.vehicle_id];
+        if (!v) return false;
+        const plate = (v.registration_number || '').toLowerCase();
+        const name = `${v.make || ''} ${v.model || ''}`.toLowerCase();
+        return plate.includes(q) || name.includes(q);
+      });
+    }
+    return result;
+  })();
 
   const overdue = filtered.filter(r => getDaysUntil(r.due_date) < 0);
   const upcoming = filtered.filter(r => getDaysUntil(r.due_date) >= 0);
@@ -158,7 +172,14 @@ export default function Reminders() {
     <PullToRefresh onRefresh={handleRefresh} className="h-full">
       <div className="p-4 lg:p-8 max-w-7xl mx-auto">
         <PageHeader title={t('reminders')} action={() => setShowForm(true)} actionLabel={`${t('add')} ${t('reminders')}`} />
-        <div className="mb-6"><VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} /></div>
+        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="relative flex-1 max-w-[220px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder={t('search_vehicles')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-8" />
+            {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label="Clear search"><X className="w-4 h-4" /></button>}
+          </div>
+          <VehicleSelector vehicles={vehicles} value={vehicleFilter} onChange={setVehicleFilter} />
+        </div>
 
         {filtered.length === 0 && !isLoading ? (
           <EmptyState icon={Bell} title={t('no_data')} actionLabel={`${t('add')} ${t('reminders')}`} action={() => setShowForm(true)} />
