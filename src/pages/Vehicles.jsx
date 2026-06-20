@@ -2,12 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useI18n } from '@/lib/i18n';
-import { formatCurrency, formatDate } from '@/lib/helpers';
+import { formatCurrency, formatDate, getDaysUntil } from '@/lib/helpers';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
+import StatCard from '@/components/shared/StatCard';
 import VehicleForm from '@/components/vehicles/VehicleForm';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Car, Bike, MoreVertical, Pencil, Trash2, Gauge, User, Building, Banknote, FileText, Search, X } from 'lucide-react';
+import { Car, Bike, MoreVertical, Pencil, Trash2, Gauge, User, Building, Banknote, FileText, Search, X, Shield, ClipboardCheck, CircleDot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,12 @@ export default function Vehicles() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: vehicles = [], isLoading, refetch } = useQuery({ queryKey: ['vehicles'], queryFn: () => base44.entities.Vehicle.list() });
+  const { data: insurances = [] } = useQuery({ queryKey: ['insurances'], queryFn: () => base44.entities.InsurancePolicy.list() });
+  const { data: kteos = [] } = useQuery({ queryKey: ['kteos'], queryFn: () => base44.entities.KteoRecord.list() });
+  const { data: tires = [] } = useQuery({ queryKey: ['tires'], queryFn: () => base44.entities.TireRecord.list() });
+
+  const activeInsurances = useMemo(() => insurances.filter(i => getDaysUntil(i.expiration_date) >= 0), [insurances]);
+  const activeKteos = useMemo(() => kteos.filter(k => getDaysUntil(k.expiration_date) >= 0), [kteos]);
 
   const makes = useMemo(() => {
     const unique = [...new Set(vehicles.map(v => v.make).filter(Boolean))];
@@ -57,6 +64,13 @@ export default function Vehicles() {
     <PullToRefresh onRefresh={handleRefresh} className="h-full">
       <div className="p-4 lg:p-8 max-w-7xl mx-auto">
         <PageHeader title={t('vehicles')} action={() => setShowForm(true)} actionLabel={t('add_vehicle')} />
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <StatCard icon={Car} label={t('total_vehicles')} value={vehicles.length} color="text-primary" bgColor="bg-primary/10" />
+          <StatCard icon={Shield} label={t('active_insurances')} value={activeInsurances.length} color="text-violet-600" bgColor="bg-violet-500/10" />
+          <StatCard icon={ClipboardCheck} label={t('active_kteo')} value={activeKteos.length} color="text-blue-600" bgColor="bg-blue-500/10" />
+          <StatCard icon={CircleDot} label={t('active_tires')} value={tires.length} color="text-slate-600" bgColor="bg-slate-500/10" />
+        </div>
 
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="relative flex-1 max-w-[220px]">
