@@ -8,7 +8,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import StatCard from '@/components/shared/StatCard';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
-import { ClipboardCheck, Pencil, Trash2, MoreVertical, Calendar, CheckCircle, XCircle, AlertTriangle, Search, X, Car } from 'lucide-react';
+import { ClipboardCheck, Pencil, Trash2, MoreVertical, Calendar, CheckCircle, XCircle, AlertTriangle, Search, X, Car, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ function KteoForm({ open, onClose, record, vehicles }) {
     vehicle_id: record?.vehicle_id || '',
     inspection_date: record?.inspection_date || '',
     expiration_date: record?.expiration_date || '',
+    mileage: record?.mileage || '',
     result: record?.result || 'pass',
     cost: record?.cost || '',
     notes: record?.notes || '',
@@ -93,7 +94,7 @@ function KteoForm({ open, onClose, record, vehicles }) {
       onClose();
     }
   });
-  const handleSubmit = (e) => { e.preventDefault(); mutation.mutate({ ...form, cost: form.cost ? Number(form.cost) : undefined }); };
+  const handleSubmit = (e) => { e.preventDefault(); mutation.mutate({ ...form, cost: form.cost ? Number(form.cost) : undefined, mileage: form.mileage ? Number(form.mileage) : undefined }); };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -105,6 +106,7 @@ function KteoForm({ open, onClose, record, vehicles }) {
             <div><Label>{t('inspection_date')}</Label><Input type="date" value={form.inspection_date} onChange={e => set('inspection_date', e.target.value)} required /></div>
             <div><Label>{t('expiration_date')}</Label><Input type="date" value={form.expiration_date} onChange={e => set('expiration_date', e.target.value)} required /></div>
           </div>
+          <div><Label>{t('mileage')}</Label><Input type="number" value={form.mileage} onChange={e => set('mileage', e.target.value)} placeholder={t('current_mileage')} /></div>
           <div><Label>{t('result')}</Label>
             <Select value={form.result} onValueChange={v => set('result', v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -237,6 +239,7 @@ export default function Kteo() {
                     </Badge>
                   </div>
                   {kteo.cost && <p className="text-sm font-bold mt-2">{formatCurrency(kteo.cost, locale)}</p>}
+                  {kteo.mileage && <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1"><Gauge className="w-3.5 h-3.5" />{kteo.mileage.toLocaleString()} km</p>}
                 </div>
               </div>
             );

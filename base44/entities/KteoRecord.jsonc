@@ -13,6 +13,10 @@
       "type": "string",
       "format": "date"
     },
+    "mileage": {
+      "type": "number",
+      "description": "Kilometers at time of inspection"
+    },
     "result": {
       "type": "string",
       "enum": [

@@ -156,20 +156,25 @@ export default function VehicleProfile() {
       return lines;
     }));
 
-    // ── KTEO History (dates, vehicle mileage ref, result) ──
+    // ── KTEO History (dates, mileage, result) ──
     addSection(t('kteo'), kteos.flatMap(k => {
-      const mileageRef = vehicle.current_mileage != null ? ` | ${vehicle.current_mileage.toLocaleString()} km` : '';
-      const lines = [`${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}${mileageRef}`];
+      let line = `${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}`;
+      if (k.mileage) line += ` | ${k.mileage.toLocaleString()} km`;
+      const lines = [line];
       if (k.notes) lines.push(`      ↳ ${k.notes}`);
       return lines;
     }));
 
-    // ── Tires (date + km only, no expiry) ──
+    // ── Tires (date + km + front/back dates, no expiry) ──
     addSection(t('tires'), tires.flatMap(tr => {
       let line = `${tr.brand || ''} ${tr.model || ''} ${tr.size || ''}`.trim();
       line += ` · ${t(tr.action_type)}`;
       if (tr.installation_date) line += ` · ${formatDate(tr.installation_date, locale)}`;
       if (tr.mileage_at_installation) line += ` | ${tr.mileage_at_installation.toLocaleString()} km`;
+      const dateParts = [];
+      if (tr.front_tire_date) dateParts.push(`Front: ${tr.front_tire_date}`);
+      if (tr.back_tire_date) dateParts.push(`Back: ${tr.back_tire_date}`);
+      if (dateParts.length > 0) line += ` | ${dateParts.join(', ')}`;
       const lines = [line];
       if (tr.notes) lines.push(`      ↳ ${tr.notes}`);
       return lines;
