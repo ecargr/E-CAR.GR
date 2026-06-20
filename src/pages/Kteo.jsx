@@ -5,9 +5,10 @@ import { useI18n } from '@/lib/i18n';
 import { formatCurrency, formatDate, getDaysUntil, getUrgencyColor, getUrgencyBg } from '@/lib/helpers';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
+import StatCard from '@/components/shared/StatCard';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
-import { ClipboardCheck, Pencil, Trash2, MoreVertical, Calendar, CheckCircle, XCircle, AlertTriangle, Search, X } from 'lucide-react';
+import { ClipboardCheck, Pencil, Trash2, MoreVertical, Calendar, CheckCircle, XCircle, AlertTriangle, Search, X, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -152,6 +153,9 @@ export default function Kteo() {
 
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
+
+  const activeKteos = kteos.filter(k => getDaysUntil(k.expiration_date) >= 0);
+
   const filtered = (() => {
     let result = vehicleFilter === 'all' ? kteos : kteos.filter(k => k.vehicle_id === vehicleFilter);
     if (searchQuery.trim()) {
@@ -170,6 +174,12 @@ export default function Kteo() {
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <PageHeader title={t('kteo')} action={() => setShowForm(true)} actionLabel={`${t('add')} ${t('kteo')}`} />
+
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <StatCard icon={Car} label={t('total_vehicles')} value={vehicles.length} color="text-primary" bgColor="bg-primary/10" />
+        <StatCard icon={ClipboardCheck} label={t('active_kteo')} value={activeKteos.length} color="text-blue-600" bgColor="bg-blue-500/10" />
+      </div>
+
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="relative flex-1 max-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

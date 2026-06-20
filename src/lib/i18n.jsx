@@ -117,7 +117,7 @@ const translations = {
     search_vehicles: 'Search by plate, make or model...',
     download_pdf: 'Download PDF',
     active_insurances: 'Active Insurances', active_kteo: 'Active KTEO',
-    active_tires: 'Active Tires',
+    active_tires: 'Active Tires', total_services: 'Total Services',
   },
   el: {
     dashboard: 'Πίνακας Ελέγχου', vehicles: 'Οχήματα', expenses: 'Έξοδα',
@@ -243,7 +243,7 @@ const translations = {
     search_vehicles: 'Αναζήτηση ανά πινακίδα, μάρκα ή μοντέλο...',
     download_pdf: 'Λήψη PDF',
     active_insurances: 'Ενεργές Ασφάλειες', active_kteo: 'Ενεργά ΚΤΕΟ',
-    active_tires: 'Ενεργά Ελαστικά',
+    active_tires: 'Ενεργά Ελαστικά', total_services: 'Συνολικά Σέρβις',
   }
 };
 

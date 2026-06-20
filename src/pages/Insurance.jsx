@@ -5,10 +5,11 @@ import { useI18n } from '@/lib/i18n';
 import { formatCurrency, formatDate, getDaysUntil, getUrgencyColor, getUrgencyBg } from '@/lib/helpers';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
+import StatCard from '@/components/shared/StatCard';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
-import { Shield, Pencil, Trash2, MoreVertical, Calendar, Building2, Search, X } from 'lucide-react';
+import { Shield, Pencil, Trash2, MoreVertical, Calendar, Building2, Search, X, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -157,6 +158,9 @@ export default function Insurance() {
 
   const vehicleMap = {};
   vehicles.forEach(v => { vehicleMap[v.id] = v; });
+
+  const activeInsurances = insurances.filter(i => getDaysUntil(i.expiration_date) >= 0);
+
   const filtered = (() => {
     let result = vehicleFilter === 'all' ? insurances : insurances.filter(i => i.vehicle_id === vehicleFilter);
     if (searchQuery.trim()) {
@@ -175,6 +179,12 @@ export default function Insurance() {
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <PageHeader title={t('insurance')} action={() => setShowForm(true)} actionLabel={`${t('add')} ${t('insurance')}`} />
+
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <StatCard icon={Car} label={t('total_vehicles')} value={vehicles.length} color="text-primary" bgColor="bg-primary/10" />
+        <StatCard icon={Shield} label={t('active_insurances')} value={activeInsurances.length} color="text-violet-600" bgColor="bg-violet-500/10" />
+      </div>
+
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="relative flex-1 max-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

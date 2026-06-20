@@ -5,10 +5,11 @@ import { useI18n } from '@/lib/i18n';
 import { formatCurrency, formatDate } from '@/lib/helpers';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
+import StatCard from '@/components/shared/StatCard';
 import ServiceForm from '@/components/services/ServiceForm';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X, Calendar, Clock, Search } from 'lucide-react';
+import { Wrench, Pencil, Trash2, MoreVertical, MapPin, Gauge, X, Calendar, Clock, Search, Car } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -85,6 +86,11 @@ export default function Services() {
     <PullToRefresh onRefresh={handleRefresh} className="h-full">
       <div className="p-4 lg:p-8 max-w-7xl mx-auto">
         <PageHeader title={t('service_history')} action={() => setShowForm(true)} actionLabel={t('add_service')} />
+
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <StatCard icon={Car} label={t('total_vehicles')} value={vehicles.length} color="text-primary" bgColor="bg-primary/10" />
+          <StatCard icon={Wrench} label={t('total_services')} value={services.length} color="text-emerald-600" bgColor="bg-emerald-500/10" />
+        </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
           <div className="relative flex-1 max-w-[220px]">
