@@ -105,37 +105,47 @@ export default function VehicleProfile() {
     });
     y += Math.ceil(specs.length / 2) * 5 + 10;
 
-    // ── Section helper ──
+    // ── Section helper: draws a professional separator bar, title, underline, then rows ──
     const addSection = (title, rows) => {
-      if (y > 230) { doc.addPage(); y = 15; }
-      // Section spacing before title
-      y += 6;
+      if (y > 220) { doc.addPage(); y = 15; }
+      // Separator bar
+      y += 4;
+      doc.setFillColor(240, 242, 245);
+      doc.rect(15, y, pageW - 30, 12, 'F');
+      y += 2;
       doc.setFontSize(13);
       doc.setFont(boldFont, 'bold');
       doc.setTextColor(30, 41, 59);
-      doc.text(title, 15, y);
-      y += 7;
-      // underline
-      doc.setDrawColor(220);
-      doc.line(15, y - 1, pageW - 15, y - 1);
-      y += 2;
+      doc.text(title, 20, y + 5);
+      y += 14;
+      // Thin line under title
+      doc.setDrawColor(210);
+      doc.setLineWidth(0.3);
+      doc.line(15, y, pageW - 15, y);
+      y += 5;
+
       doc.setFontSize(9);
       doc.setFont(fontName, 'normal');
       doc.setTextColor(60);
       if (rows.length === 0) {
-        doc.text(t('no_data'), 15, y);
-        y += 5;
+        doc.text(t('no_data'), 18, y);
+        y += 6;
       } else {
-        rows.forEach(r => {
-          if (y > 270) { doc.addPage(); y = 15; }
-          doc.text(r, 15, y);
+        rows.forEach((r, idx) => {
+          if (y > 272) { doc.addPage(); y = 15; }
+          // subtle alternating row background
+          if (idx % 2 === 0) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(15, y - 2, pageW - 30, 5, 'F');
+          }
+          doc.text(r, 18, y);
           y += 5;
         });
       }
-      y += 8;
+      y += 10;
     };
 
-    // ── Service History (with notes & prices) ──
+    // ── Service History (notes & prices) ──
     addSection(t('service_history'), services.flatMap(s => {
       let line = `${formatDate(s.date, locale)} — ${t(s.service_type)}`;
       if (s.service_center) line += ` @ ${s.service_center}`;
@@ -146,23 +156,20 @@ export default function VehicleProfile() {
       return lines;
     }));
 
-    // ── KTEO History (dates, result, no prices) ──
+    // ── KTEO History (dates, vehicle mileage ref, result) ──
     addSection(t('kteo'), kteos.flatMap(k => {
-      const lines = [`${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}`];
+      const mileageRef = vehicle.current_mileage != null ? ` | ${vehicle.current_mileage.toLocaleString()} km` : '';
+      const lines = [`${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}${mileageRef}`];
       if (k.notes) lines.push(`      ↳ ${k.notes}`);
       return lines;
     }));
 
-    // ── Tires (dates, no prices, include expiry) ──
+    // ── Tires (date + km only, no expiry) ──
     addSection(t('tires'), tires.flatMap(tr => {
       let line = `${tr.brand || ''} ${tr.model || ''} ${tr.size || ''}`.trim();
       line += ` · ${t(tr.action_type)}`;
       if (tr.installation_date) line += ` · ${formatDate(tr.installation_date, locale)}`;
       if (tr.mileage_at_installation) line += ` | ${tr.mileage_at_installation.toLocaleString()} km`;
-      const expParts = [];
-      if (tr.front_tire_expiry) expParts.push(`Front Exp: ${tr.front_tire_expiry}`);
-      if (tr.back_tire_expiry) expParts.push(`Back Exp: ${tr.back_tire_expiry}`);
-      if (expParts.length > 0) line += ` | ${expParts.join(', ')}`;
       const lines = [line];
       if (tr.notes) lines.push(`      ↳ ${tr.notes}`);
       return lines;
