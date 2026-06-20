@@ -37,30 +37,70 @@ export default function VehicleProfile() {
     const pageW = doc.internal.pageSize.getWidth();
     let y = 15;
 
-    doc.setFontSize(18);
+    // ── Title ──
+    doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${vehicle.make} ${vehicle.model}`, 15, y);
-    y += 8;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    if (vehicle.registration_number) {
-      doc.text(`${t('registration_number')}: ${vehicle.registration_number}`, 15, y);
-      y += 6;
-    }
-    doc.text(`${t('current_mileage')}: ${vehicle.current_mileage?.toLocaleString() || '—'} km`, 15, y);
-    y += 10;
+    doc.setTextColor(30, 41, 59);
+    doc.text(`${t('vehicle_details')}`, 15, y);
+    y += 14;
 
+    // ── Vehicle Info Block ──
+    doc.setDrawColor(200);
+    doc.setLineWidth(0.5);
+    doc.rect(15, y, pageW - 30, 55);
+    y += 5;
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${vehicle.make} ${vehicle.model}${vehicle.version ? ' · ' + vehicle.version : ''}`, 20, y);
+    y += 7;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80);
+
+    if (vehicle.registration_number) {
+      doc.text(`${t('registration_number')}: ${vehicle.registration_number}`, 20, y);
+    }
+    if (vehicle.vin) {
+      doc.text(`${t('vin_number')}: ${vehicle.vin}`, pageW - 80, y);
+    }
+    y += 5;
+
+    const specs = [];
+    if (vehicle.current_mileage != null) specs.push(`${t('current_mileage')}: ${vehicle.current_mileage.toLocaleString()} km`);
+    if (vehicle.registration_date) specs.push(`${t('registration_date_label')}: ${formatDate(vehicle.registration_date, locale)}`);
+    if (vehicle.fuel_type) specs.push(`${t('fuel_type')}: ${t(vehicle.fuel_type)}`);
+    if (vehicle.transmission) specs.push(`${t('transmission')}: ${t(vehicle.transmission)}`);
+    if (vehicle.engine_capacity) specs.push(`${t('engine_capacity')}: ${vehicle.engine_capacity} cc`);
+    if (vehicle.horsepower) specs.push(`${t('horsepower')}: ${vehicle.horsepower} hp`);
+    if (vehicle.color) specs.push(`${t('color')}: ${vehicle.color}`);
+
+    specs.forEach((s, i) => {
+      const col = i % 2 === 0 ? 20 : pageW / 2 + 10;
+      const row = Math.floor(i / 2);
+      doc.text(s, col, y + row * 5);
+    });
+    y += Math.ceil(specs.length / 2) * 5 + 12;
+
+    // ── Section helper ──
     const addSection = (title, rows) => {
-      if (y > 260) { doc.addPage(); y = 15; }
+      if (y > 240) { doc.addPage(); y = 15; }
       doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
       doc.text(title, 15, y);
-      y += 8;
+      y += 7;
+      // underline
+      doc.setDrawColor(220);
+      doc.line(15, y - 1, pageW - 15, y - 1);
+      y += 2;
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60);
       if (rows.length === 0) {
         doc.text(t('no_data'), 15, y);
-        y += 6;
+        y += 5;
       } else {
         rows.forEach(r => {
           if (y > 270) { doc.addPage(); y = 15; }
@@ -68,13 +108,39 @@ export default function VehicleProfile() {
           y += 5;
         });
       }
-      y += 6;
+      y += 5;
     };
 
-    addSection(t('service_history'), services.map(s => `${formatDate(s.date, locale)} — ${t(s.service_type)}${s.service_center ? ' @ ' + s.service_center : ''}${s.cost ? ' | ' + formatCurrency(s.cost, locale) : ''}${s.mileage ? ' | ' + s.mileage.toLocaleString() + ' km' : ''}`));
-    addSection(t('tires'), tires.map(tr => `${formatDate(tr.installation_date, locale)} — ${tr.brand || ''} ${tr.model || ''} ${tr.size || ''} · ${t(tr.action_type)}${tr.cost ? ' | ' + formatCurrency(tr.cost, locale) : ''}`));
-    addSection(t('kteo'), kteos.map(k => `${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}${k.cost ? ' | ' + formatCurrency(k.cost, locale) : ''}`));
-    addSection(t('insurance'), insurances.map(i => `${i.company} — ${t(i.coverage_type)} | ${formatDate(i.start_date, locale)} → ${formatDate(i.expiration_date, locale)}${i.cost ? ' | ' + formatCurrency(i.cost, locale) : ''}`));
+    // ── Service History (with notes & prices) ──
+    addSection(t('service_history'), services.map(s => {
+      let line = `${formatDate(s.date, locale)} — ${t(s.service_type)}`;
+      if (s.service_center) line += ` @ ${s.service_center}`;
+      if (s.mileage) line += ` | ${s.mileage.toLocaleString()} km`;
+      if (s.cost) line += ` | ${formatCurrency(s.cost, locale)}`;
+      if (s.notes) line += `   (${s.notes})`;
+      return line;
+    }));
+
+    // ── KTEO History (dates, result, no prices) ──
+    addSection(t('kteo'), kteos.map(k => {
+      let line = `${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}`;
+      if (k.notes) line += `   (${k.notes})`;
+      return line;
+    }));
+
+    // ── Tires (dates, no prices, include expiry) ──
+    addSection(t('tires'), tires.map(tr => {
+      let line = `${tr.brand || ''} ${tr.model || ''} ${tr.size || ''}`.trim();
+      line += ` · ${t(tr.action_type)}`;
+      if (tr.installation_date) line += ` · ${formatDate(tr.installation_date, locale)}`;
+      if (tr.mileage_at_installation) line += ` | ${tr.mileage_at_installation.toLocaleString()} km`;
+      const expParts = [];
+      if (tr.front_tire_expiry) expParts.push(`Front Exp: ${tr.front_tire_expiry}`);
+      if (tr.back_tire_expiry) expParts.push(`Back Exp: ${tr.back_tire_expiry}`);
+      if (expParts.length > 0) line += ` | ${expParts.join(', ')}`;
+      if (tr.notes) line += `   (${tr.notes})`;
+      return line;
+    }));
 
     doc.save(`${vehicle.make}_${vehicle.model}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
