@@ -32,31 +32,53 @@ export default function VehicleProfile() {
 
   const hasPurchaseInfo = vehicle.seller_name || vehicle.purchase_method || vehicle.purchase_price != null;
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     let y = 15;
 
+    // ── Load Greek-compatible font ──
+    let fontName = 'helvetica';
+    let boldFont = 'helvetica';
+    try {
+      const loadFont = async (url, name, style) => {
+        const resp = await fetch(url);
+        const buffer = await resp.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        const base64 = btoa(binary);
+        doc.addFileToVFS(name + '.ttf', base64);
+        doc.addFont(name + '.ttf', name, style);
+        return name;
+      };
+      boldFont = await loadFont('https://cdn.jsdelivr.net/gh/googlefonts/roboto@main/src/hinted/Roboto-Bold.ttf', 'RobotoBold', 'bold');
+      fontName = await loadFont('https://cdn.jsdelivr.net/gh/googlefonts/roboto@main/src/hinted/Roboto-Regular.ttf', 'Roboto', 'normal');
+    } catch (e) {
+      // fallback to helvetica (no Greek support but won't crash)
+    }
+
     // ── Title ──
     doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(boldFont, 'bold');
     doc.setTextColor(30, 41, 59);
     doc.text(`${t('vehicle_details')}`, 15, y);
-    y += 14;
+    y += 16;
 
     // ── Vehicle Info Block ──
     doc.setDrawColor(200);
     doc.setLineWidth(0.5);
-    doc.rect(15, y, pageW - 30, 55);
+    const infoBlockH = 50;
+    doc.rect(15, y, pageW - 30, infoBlockH);
     y += 5;
 
     doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(boldFont, 'bold');
     doc.text(`${vehicle.make} ${vehicle.model}${vehicle.version ? ' · ' + vehicle.version : ''}`, 20, y);
     y += 7;
 
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(fontName, 'normal');
     doc.setTextColor(80);
 
     if (vehicle.registration_number) {
@@ -81,13 +103,15 @@ export default function VehicleProfile() {
       const row = Math.floor(i / 2);
       doc.text(s, col, y + row * 5);
     });
-    y += Math.ceil(specs.length / 2) * 5 + 12;
+    y += Math.ceil(specs.length / 2) * 5 + 10;
 
     // ── Section helper ──
     const addSection = (title, rows) => {
-      if (y > 240) { doc.addPage(); y = 15; }
+      if (y > 230) { doc.addPage(); y = 15; }
+      // Section spacing before title
+      y += 6;
       doc.setFontSize(13);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(boldFont, 'bold');
       doc.setTextColor(30, 41, 59);
       doc.text(title, 15, y);
       y += 7;
@@ -96,7 +120,7 @@ export default function VehicleProfile() {
       doc.line(15, y - 1, pageW - 15, y - 1);
       y += 2;
       doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(fontName, 'normal');
       doc.setTextColor(60);
       if (rows.length === 0) {
         doc.text(t('no_data'), 15, y);
@@ -108,28 +132,29 @@ export default function VehicleProfile() {
           y += 5;
         });
       }
-      y += 5;
+      y += 8;
     };
 
     // ── Service History (with notes & prices) ──
-    addSection(t('service_history'), services.map(s => {
+    addSection(t('service_history'), services.flatMap(s => {
       let line = `${formatDate(s.date, locale)} — ${t(s.service_type)}`;
       if (s.service_center) line += ` @ ${s.service_center}`;
       if (s.mileage) line += ` | ${s.mileage.toLocaleString()} km`;
       if (s.cost) line += ` | ${formatCurrency(s.cost, locale)}`;
-      if (s.notes) line += `   (${s.notes})`;
-      return line;
+      const lines = [line];
+      if (s.notes) lines.push(`      ↳ ${s.notes}`);
+      return lines;
     }));
 
     // ── KTEO History (dates, result, no prices) ──
-    addSection(t('kteo'), kteos.map(k => {
-      let line = `${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}`;
-      if (k.notes) line += `   (${k.notes})`;
-      return line;
+    addSection(t('kteo'), kteos.flatMap(k => {
+      const lines = [`${formatDate(k.inspection_date, locale)} → ${formatDate(k.expiration_date, locale)} — ${t(k.result)}`];
+      if (k.notes) lines.push(`      ↳ ${k.notes}`);
+      return lines;
     }));
 
     // ── Tires (dates, no prices, include expiry) ──
-    addSection(t('tires'), tires.map(tr => {
+    addSection(t('tires'), tires.flatMap(tr => {
       let line = `${tr.brand || ''} ${tr.model || ''} ${tr.size || ''}`.trim();
       line += ` · ${t(tr.action_type)}`;
       if (tr.installation_date) line += ` · ${formatDate(tr.installation_date, locale)}`;
@@ -138,8 +163,9 @@ export default function VehicleProfile() {
       if (tr.front_tire_expiry) expParts.push(`Front Exp: ${tr.front_tire_expiry}`);
       if (tr.back_tire_expiry) expParts.push(`Back Exp: ${tr.back_tire_expiry}`);
       if (expParts.length > 0) line += ` | ${expParts.join(', ')}`;
-      if (tr.notes) line += `   (${tr.notes})`;
-      return line;
+      const lines = [line];
+      if (tr.notes) lines.push(`      ↳ ${tr.notes}`);
+      return lines;
     }));
 
     doc.save(`${vehicle.make}_${vehicle.model}_${new Date().toISOString().split('T')[0]}.pdf`);
