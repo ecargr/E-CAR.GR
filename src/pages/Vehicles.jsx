@@ -7,6 +7,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import StatCard from '@/components/shared/StatCard';
 import VehicleForm from '@/components/vehicles/VehicleForm';
+import VehicleListExport from '@/components/vehicles/VehicleListExport';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 import { Car, Bike, MoreVertical, Pencil, Trash2, Gauge, User, Building, Banknote, FileText, Search, X, Shield, ClipboardCheck, CircleDot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -119,6 +120,8 @@ export default function Vehicles() {
               <SelectItem value="reg_date_desc">{t('reg_date_newest')}</SelectItem>
             </SelectContent>
           </Select>
+
+          <VehicleListExport vehicles={vehicles} />
         </div>
 
         {vehicles.length === 0 && !isLoading ? (
