@@ -24,6 +24,17 @@ export default function VehicleProfile() {
   const { data: documents = [] } = useQuery({ queryKey: ['documents'], queryFn: () => base44.entities.VehicleDocument.list('-created_date'), select: (d) => d.filter(x => x.vehicle_id === id) });
   const { data: expenses = [] } = useQuery({ queryKey: ['expenses'], queryFn: () => base44.entities.Expense.list('-date', 200), select: (e) => e.filter(x => x.vehicle_id === id).slice(0, 50) });
 
+  if (!vehicle) {
+    return (
+      <div className="p-8 text-center">
+        <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-muted-foreground">{t('loading')}</p>
+      </div>
+    );
+  }
+
+  const hasPurchaseInfo = vehicle.seller_name || vehicle.purchase_method || vehicle.purchase_price != null;
+
   // Gather all attached files from related records so they appear in the document search
   const allDocuments = [
     ...documents.map(d => ({ id: d.id, title: d.title, category: d.category, file_url: d.file_url, expiry_date: d.expiry_date, notes: d.notes })),
@@ -43,17 +54,6 @@ export default function VehicleProfile() {
     ]),
     ...(vehicle.purchase_documents || []).map((url, idx) => ({ id: `veh-${idx}`, title: t('purchase_documents'), category: 'purchase', file_url: url, expiry_date: undefined, notes: undefined })),
   ].filter(d => d.file_url);
-
-  if (!vehicle) {
-    return (
-      <div className="p-8 text-center">
-        <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-muted-foreground">{t('loading')}</p>
-      </div>
-    );
-  }
-
-  const hasPurchaseInfo = vehicle.seller_name || vehicle.purchase_method || vehicle.purchase_price != null;
 
   const exportPDF = async () => {
     const doc = new jsPDF();
