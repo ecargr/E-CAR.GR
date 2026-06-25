@@ -44,6 +44,13 @@
     "cost": {
       "type": "number"
     },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Attached document/photo URLs"
+    },
     "front_tire_date": {
       "type": "string",
       "description": "Front tire manufacturing date (MM/YY)"

@@ -37,6 +37,13 @@
     "document_url": {
       "type": "string"
     },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Attached document/photo URLs"
+    },
     "status": {
       "type": "string",
       "enum": [
