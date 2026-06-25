@@ -22,6 +22,27 @@ export default function VehicleProfile() {
   const { data: kteos = [] } = useQuery({ queryKey: ['kteos'], queryFn: () => base44.entities.KteoRecord.list('-inspection_date'), select: (k) => k.filter(x => x.vehicle_id === id).slice(0, 30) });
   const { data: insurances = [] } = useQuery({ queryKey: ['insurances'], queryFn: () => base44.entities.InsurancePolicy.list('-expiration_date'), select: (i) => i.filter(x => x.vehicle_id === id).slice(0, 30) });
   const { data: documents = [] } = useQuery({ queryKey: ['documents'], queryFn: () => base44.entities.VehicleDocument.list('-created_date'), select: (d) => d.filter(x => x.vehicle_id === id) });
+  const { data: expenses = [] } = useQuery({ queryKey: ['expenses'], queryFn: () => base44.entities.Expense.list('-date', 200), select: (e) => e.filter(x => x.vehicle_id === id).slice(0, 50) });
+
+  // Gather all attached files from related records so they appear in the document search
+  const allDocuments = [
+    ...documents.map(d => ({ id: d.id, title: d.title, category: d.category, file_url: d.file_url, expiry_date: d.expiry_date, notes: d.notes })),
+    ...insurances.flatMap(i => [
+      ...(i.photos || []).map((url, idx) => ({ id: `ins-${i.id}-${idx}`, title: `${t('insurance')} — ${i.company || ''}`, category: 'insurance', file_url: url, expiry_date: i.expiration_date, notes: i.policy_number })),
+      ...(i.document_url ? [{ id: `insdoc-${i.id}`, title: `${t('insurance')} — ${i.company || ''}`, category: 'insurance', file_url: i.document_url, expiry_date: i.expiration_date, notes: i.policy_number }] : []),
+    ]),
+    ...kteos.flatMap(k => (k.photos || []).map((url, idx) => ({ id: `kteo-${k.id}-${idx}`, title: `${t('kteo')} — ${formatDate(k.inspection_date, locale)}`, category: 'kteo', file_url: url, expiry_date: k.expiration_date, notes: k.notes }))),
+    ...tires.flatMap(tr => (tr.photos || []).map((url, idx) => ({ id: `tire-${tr.id}-${idx}`, title: `${t('tires')} — ${tr.brand || ''} ${tr.model || ''}`.trim(), category: 'tires', file_url: url, expiry_date: undefined, notes: tr.notes }))),
+    ...services.flatMap(s => [
+      ...(s.photos || []).map((url, idx) => ({ id: `svc-${s.id}-${idx}`, title: `${t(s.service_type)} — ${formatDate(s.date, locale)}`, category: 'service_invoice', file_url: url, expiry_date: undefined, notes: s.notes })),
+      ...(s.invoice_url ? [{ id: `svcdoc-${s.id}`, title: `${t(s.service_type)} — ${formatDate(s.date, locale)}`, category: 'service_invoice', file_url: s.invoice_url, expiry_date: undefined, notes: s.notes }] : []),
+    ]),
+    ...expenses.flatMap(e => [
+      ...(e.receipt_urls || []).map((url, idx) => ({ id: `exp-${e.id}-${idx}`, title: `${t(e.category)} — ${formatDate(e.date, locale)}`, category: e.category === 'insurance' ? 'insurance' : e.category === 'kteo' ? 'kteo' : e.category === 'tires' ? 'tires' : 'service_invoice', file_url: url, expiry_date: undefined, notes: e.notes })),
+      ...(e.receipt_url ? [{ id: `expdoc-${e.id}`, title: `${t(e.category)} — ${formatDate(e.date, locale)}`, category: e.category === 'insurance' ? 'insurance' : e.category === 'kteo' ? 'kteo' : e.category === 'tires' ? 'tires' : 'service_invoice', file_url: e.receipt_url, expiry_date: undefined, notes: e.notes }] : []),
+    ]),
+    ...(vehicle.purchase_documents || []).map((url, idx) => ({ id: `veh-${idx}`, title: t('purchase_documents'), category: 'purchase', file_url: url, expiry_date: undefined, notes: undefined })),
+  ].filter(d => d.file_url);
 
   if (!vehicle) {
     return (
@@ -331,7 +352,7 @@ export default function VehicleProfile() {
             );
           }}
         />
-        <VehicleDocumentSearch documents={documents} />
+        <VehicleDocumentSearch documents={allDocuments} />
       </div>
     </div>
   );
