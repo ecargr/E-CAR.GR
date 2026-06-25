@@ -8,7 +8,8 @@ import EmptyState from '@/components/shared/EmptyState';
 import StatCard from '@/components/shared/StatCard';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
-import { CircleDot, Pencil, Trash2, MoreVertical, Gauge, Search, X, Calendar, Car } from 'lucide-react';
+import { CircleDot, Pencil, Trash2, MoreVertical, Gauge, Search, X, Calendar, Car, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -214,6 +215,7 @@ function TireForm({ open, onClose, record, vehicles }) {
 
 export default function Tires() {
   const { t, locale } = useI18n();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -306,6 +308,7 @@ export default function Tires() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {vehicle && <DropdownMenuItem onClick={() => navigate(`/vehicles/${vehicle.id}`)}><ExternalLink className="w-3.5 h-3.5 mr-2" />{t('vehicle_details')}</DropdownMenuItem>}
                           <DropdownMenuItem onClick={() => { setEditItem(tire); setShowForm(true); }}><Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setDeleteId(tire.id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}</DropdownMenuItem>
                         </DropdownMenuContent>

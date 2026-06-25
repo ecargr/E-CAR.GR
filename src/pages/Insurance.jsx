@@ -9,7 +9,8 @@ import StatCard from '@/components/shared/StatCard';
 import VehicleSelector from '@/components/shared/VehicleSelector';
 import AttachmentsUploader from '@/components/shared/AttachmentsUploader';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
-import { Shield, Pencil, Trash2, MoreVertical, Calendar, Building2, Search, X, Car } from 'lucide-react';
+import { Shield, Pencil, Trash2, MoreVertical, Calendar, Building2, Search, X, Car, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -141,6 +142,7 @@ function InsuranceForm({ open, onClose, record, vehicles }) {
 
 export default function Insurance() {
   const { t, locale } = useI18n();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -211,6 +213,7 @@ export default function Insurance() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {vehicle && <DropdownMenuItem onClick={() => navigate(`/vehicles/${vehicle.id}`)}><ExternalLink className="w-3.5 h-3.5 mr-2" />{t('vehicle_details')}</DropdownMenuItem>}
                       <DropdownMenuItem onClick={() => { setEditItem(ins); setShowForm(true); }}><Pencil className="w-3.5 h-3.5 mr-2" />{t('edit')}</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setDeleteId(ins.id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />{t('delete')}</DropdownMenuItem>
                     </DropdownMenuContent>
