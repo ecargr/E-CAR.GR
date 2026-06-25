@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
+import VehicleDocumentSearch from '@/components/vehicles/VehicleDocumentSearch';
 
 export default function VehicleProfile() {
   const { id } = useParams();
@@ -20,6 +21,7 @@ export default function VehicleProfile() {
   const { data: tires = [] } = useQuery({ queryKey: ['tires'], queryFn: () => base44.entities.TireRecord.list('-installation_date'), select: (t) => t.filter(x => x.vehicle_id === id).slice(0, 30) });
   const { data: kteos = [] } = useQuery({ queryKey: ['kteos'], queryFn: () => base44.entities.KteoRecord.list('-inspection_date'), select: (k) => k.filter(x => x.vehicle_id === id).slice(0, 30) });
   const { data: insurances = [] } = useQuery({ queryKey: ['insurances'], queryFn: () => base44.entities.InsurancePolicy.list('-expiration_date'), select: (i) => i.filter(x => x.vehicle_id === id).slice(0, 30) });
+  const { data: documents = [] } = useQuery({ queryKey: ['documents'], queryFn: () => base44.entities.VehicleDocument.list('-created_date'), select: (d) => d.filter(x => x.vehicle_id === id) });
 
   if (!vehicle) {
     return (
@@ -329,6 +331,7 @@ export default function VehicleProfile() {
             );
           }}
         />
+        <VehicleDocumentSearch documents={documents} />
       </div>
     </div>
   );
